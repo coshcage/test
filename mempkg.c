@@ -7,12 +7,14 @@
  */
 #include "mempkg.h"
 
-UCHART volatile array[MEM_SIZ];
+UCHART volatile array[MEM_SIZ]; /* Create a linear address space in heap. */
 
 const PUCHAR volatile pmem = array;
 
-volatile P_BLOCK_HEADER phead = NULL;
+volatile P_BLOCK_HEADER phead = NULL; /* This is the header pointer of block chain. */
 
+/* Invoke this function before you use any function of this package.
+ */
 void mpkInitMemory(void)
 {
 	phead = (P_BLOCK_HEADER)pmem;
@@ -78,7 +80,7 @@ void * malloc(size_t size)
 
 void free(void * ptr)
 {	/* Preserve the tail and header block structure. */
-	if (ptr == pmem || ptr == pmem + MEM_SIZ)
+	if (pmem == ptr || pmem + MEM_SIZ == ptr)
 		return;
 	if (NULL != ptr)
 	{
@@ -97,7 +99,7 @@ void free(void * ptr)
 
 void * realloc(void * ptr, size_t size)
 {	/* Preserve the tail and header block structure. */
-	if (ptr == pmem || ptr == pmem + MEM_SIZ)
+	if (pmem == ptr || pmem + MEM_SIZ == ptr)
 		return NULL;
 	if (NULL == ptr && size > 0)
 		return malloc(size);
