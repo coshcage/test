@@ -1,0 +1,1 @@
+File 'mempkg.h' and 'mempkg.c' are a simple memory allocator if users want to run StoneValley without cstdlib, they can replace memory package with it.
