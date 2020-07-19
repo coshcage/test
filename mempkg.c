@@ -2,7 +2,7 @@
  * Name:        mempkg.c
  * Description: Memory package.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0714201755B0714201755L00032
+ * File ID:     0714201755B0720200200L00152
  * License:     Public Domain.
  */
 #include "mempkg.h"
@@ -110,7 +110,9 @@ void * realloc(void * ptr, size_t size)
 		{
 			if (NULL != pnode->pnext && ptr == pnode->pnext->pblock)
 			{
-				if (pnode->pnext->pnext->pblock - sizeof(BLOCK_HEADER) - pnode->pblock - pnode->size >=
+				if (size == pnode->pnext->size)
+					return ptr;
+				else if (pnode->pnext->pnext->pblock - sizeof(BLOCK_HEADER) - pnode->pblock - pnode->size >=
 					size + sizeof(BLOCK_HEADER))
 				{
 					pnode->pnext->size = size;
