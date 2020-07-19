@@ -19,7 +19,7 @@ typedef struct st_BLOCK_HEADER
 	size_t size;
 } BLOCK_HEADER, * P_BLOCK_HEADER;
 
-#define MEM_SIZ (8182) /* Alter this macro to control the size of a heap. */
+#define MEM_SIZ (8192) /* Alter this macro to control the size of a heap. */
 
 void mpkInitMemory(void);
 void * memcpy     (void *       dst, void *       src, size_t size);

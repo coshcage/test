@@ -87,7 +87,7 @@ void free(void * ptr)
 		P_BLOCK_HEADER pnode;
 		for (pnode = phead; NULL != pnode; pnode = pnode->pnext)
 		{
-			if (pnode->pnext->pblock == ptr)
+			if (NULL != pnode->pnext && ptr == pnode->pnext->pblock)
 			{
 				pnode->pnext = pnode->pnext->pnext;
 				return;
@@ -108,7 +108,7 @@ void * realloc(void * ptr, size_t size)
 		P_BLOCK_HEADER pnode;
 		for (pnode = phead; NULL != pnode; pnode = pnode->pnext)
 		{
-			if (ptr == pnode->pnext->pblock)
+			if (NULL != pnode->pnext && ptr == pnode->pnext->pblock)
 			{
 				if (pnode->pnext->pnext->pblock - sizeof(BLOCK_HEADER) - pnode->pblock - pnode->size >=
 					size + sizeof(BLOCK_HEADER))
