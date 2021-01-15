@@ -11,7 +11,7 @@ int cbfcmp(const void * px, const void * py)
 	return *(MYTYPE *)px - *(MYTYPE *)py;
 }
 
-int arr[SIZE];
+MYTYPE arr[SIZE];
 
 int main(void)
 {
