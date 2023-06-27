@@ -21,7 +21,7 @@ typedef struct st_CELL
 	void * pdata;
 } CELL, * P_CELL;
 
-typedef CBF_TRAVERSE SICBF_CONDITION;
+typedef BOOL(*SICBF_SELECT)(P_CELL * pitem, size_t param);
 
 typedef struct st_TABLE
 {
