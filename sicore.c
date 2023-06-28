@@ -9,12 +9,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 /*
 
 */
 // SVIMRDB
 #include "svimrdb.h"
 
+extern int _grpCBFCompareInteger(const void * px, const void * py);
 
 static size_t _sizCUTTarget;
 
@@ -387,6 +389,36 @@ P_MATRIX siCreateSelectView(P_MATRIX pmtx, SICBF_SELECT cbfsel, size_t param)
 		}
 	}
 	return pmtxr;
+}
+
+P_MATRIX siCreateProjectView(P_MATRIX pmtx, P_ARRAY_Z parrz)
+{
+	P_MATRIX pmtxt = strCreateMatrix(pmtx->ln, parrz->num, sizeof(P_CELL));
+
+	if (NULL != pmtxt)
+	{
+		size_t i, j;
+		P_MATRIX pmtxr;
+		strSortArrayZ(parrz, sizeof(size_t), _grpCBFCompareInteger);
+		for (i = 0; i < parrz->num; ++i)
+		{
+			size_t col;
+			col = *(size_t *)strLocateItemArrayZ(parrz, sizeof(size_t), i);
+			for (j = 0; j < pmtx->ln; ++j)
+			{
+				memcpy
+				(
+					strGetValueMatrix(NULL, pmtxt, j, i,sizeof(P_CELL)),
+					strGetValueMatrix(NULL, pmtx, j, col, sizeof(P_CELL)),
+					sizeof(P_CELL)
+				);
+			}
+		}
+		pmtxr = siCreateUniqueView(pmtxt);
+		strDeleteMatrix(pmtxt);
+		return pmtxr;
+	}
+	return NULL;
 }
 
 P_CELL siCreateCell(void * pitem, CellType ct)
@@ -843,7 +875,7 @@ BOOL cbftestsel(P_CELL * pitem, size_t param)
 	return FALSE;
 }
 
-int main(int argc, char * argv[])
+int main_test_select_0(int argc, char * argv[])
 {
 	P_CELL pc;
 	P_MATRIX pmtx, p;
@@ -895,6 +927,111 @@ int main(int argc, char * argv[])
 	//printf("%s\n", (char *)strGetValueMatrix(NULL, p, 1, 1, sizeof(char *)));
 
 	strDeleteMatrix(pmtx);
+	strDeleteMatrix(p);
+
+	return 0;
+}
+
+int main_test_project_0(int argc, char * argv[])
+{
+	P_CELL pc;
+	P_MATRIX pmtxa, pmtxb, p;
+	P_ARRAY_Z parrz;
+
+	parrz = strCreateArrayZ(2, sizeof(size_t));
+	*(size_t *)strLocateItemArrayZ(parrz, sizeof(size_t), 0) = 2;
+	*(size_t *)strLocateItemArrayZ(parrz, sizeof(size_t), 1) = 1;
+
+	pmtxa = strCreateMatrix(3, 3, sizeof(P_CELL));
+
+	pc = siCreateCell("a1", CT_STRING);
+	strSetValueMatrix(pmtxa, 0, 0, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("a2", CT_STRING);
+	strSetValueMatrix(pmtxa, 0, 1, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("a3", CT_STRING);
+	strSetValueMatrix(pmtxa, 0, 2, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("b1", CT_STRING);
+	strSetValueMatrix(pmtxa, 1, 0, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("b2", CT_STRING);
+	strSetValueMatrix(pmtxa, 1, 1, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("b3", CT_STRING);
+	strSetValueMatrix(pmtxa, 1, 2, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("b1", CT_STRING);
+	strSetValueMatrix(pmtxa, 2, 0, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("b2", CT_STRING);
+	strSetValueMatrix(pmtxa, 2, 1, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("b3", CT_STRING);
+	strSetValueMatrix(pmtxa, 2, 2, &pc, sizeof(P_CELL));
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	pmtxb = NULL;
+	/*
+	pmtxb = strCreateMatrix(3, 2, sizeof(P_CELL));
+
+	pc = siCreateCell("a1", CT_STRING);
+	strSetValueMatrix(pmtxb, 0, 0, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("a2", CT_STRING);
+	strSetValueMatrix(pmtxb, 0, 1, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("c1", CT_STRING);
+	strSetValueMatrix(pmtxb, 1, 0, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("c2", CT_STRING);
+	strSetValueMatrix(pmtxb, 1, 1, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("d1", CT_STRING);
+	strSetValueMatrix(pmtxb, 2, 0, &pc, sizeof(P_CELL));
+
+	pc = siCreateCell("d2", CT_STRING);
+	strSetValueMatrix(pmtxb, 2, 1, &pc, sizeof(P_CELL));
+	*/
+
+	/*
+	strSetValueMatrix(pmtx, 0, 1, siCreateCell("a2", CT_STRING), sizeof(P_CELL));
+	strSetValueMatrix(pmtx, 1, 0, siCreateCell("b1", CT_STRING), sizeof(P_CELL));
+	strSetValueMatrix(pmtx, 1, 1, siCreateCell("b2", CT_STRING), sizeof(P_CELL));
+	strSetValueMatrix(pmtx, 2, 0, siCreateCell("b1", CT_STRING), sizeof(P_CELL));
+	strSetValueMatrix(pmtx, 2, 1, siCreateCell("b2", CT_STRING), sizeof(P_CELL));
+	*/
+
+	// pc = *(P_CELL *)strGetValueMatrix(NULL, pmtx, 0, 0, sizeof(P_CELL));
+
+	p = siCreateProjectView(pmtxa, parrz); // 5,3
+
+	printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 0, 0, sizeof(P_CELL)))->pdata);
+	printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 0, 1, sizeof(P_CELL)))->pdata);
+	//printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 0, 2, sizeof(P_CELL)))->pdata);
+	printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 1, 0, sizeof(P_CELL)))->pdata);
+	printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 1, 1, sizeof(P_CELL)))->pdata);
+	//printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 1, 2, sizeof(P_CELL)))->pdata);
+	//printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 2, 0, sizeof(P_CELL)))->pdata);
+	//printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 2, 1, sizeof(P_CELL)))->pdata);
+	// printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 2, 2, sizeof(P_CELL)))->pdata);
+	//printf("null\n");
+	//printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 3, 0, sizeof(P_CELL)))->pdata);
+	///printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 3, 1, sizeof(P_CELL)))->pdata);
+	//printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 3, 2, sizeof(P_CELL)))->pdata);
+	//printf("null\n");
+	//printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 4, 0, sizeof(P_CELL)))->pdata);
+	//printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 4, 1, sizeof(P_CELL)))->pdata);
+	//printf("%s\n", (char *)(*(P_CELL *)strGetValueMatrix(NULL, p, 4, 2, sizeof(P_CELL)))->pdata);
+	//printf("null\n");
+
+	//printf("%s\n", (char *)strGetValueMatrix(NULL, p, 0, 1, sizeof(char *)));
+	//printf("%s\n", (char *)strGetValueMatrix(NULL, p, 1, 0, sizeof(char *)));
+	//printf("%s\n", (char *)strGetValueMatrix(NULL, p, 1, 1, sizeof(char *)));
+
+	strDeleteMatrix(pmtxa);
+	strDeleteMatrix(pmtxb);
 	strDeleteMatrix(p);
 
 	return 0;

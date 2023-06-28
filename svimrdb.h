@@ -21,6 +21,12 @@ typedef struct st_CELL
 	void * pdata;
 } CELL, * P_CELL;
 
+typedef struct st_TBLHDR
+{
+	CellType ct;
+	char * strname;
+} TBLHDR, * P_TBLHDR;
+
 typedef BOOL(*SICBF_SELECT)(P_CELL * pitem, size_t param);
 
 typedef struct st_TABLE
