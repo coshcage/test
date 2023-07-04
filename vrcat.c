@@ -1,4 +1,3 @@
-
 /* vrcat for Visual Red Cat.
  * (C) cosh.cage#hotmail.com
  * 06/15/2023
@@ -10,12 +9,12 @@
 
 int main(int argc, char * argv[])
 {
-		size_t i = 0, m;
+		size_t i = 0, m = 0;
 		ARRAY_Z * parrtxt, arrptn, * parr;
 		
 		if (argc < 2)
 				return 0;
-		arrptn.pdata = argv[1];
+		arrptn.pdata = (PUCHAR)argv[1];
 		arrptn.num = strlen(argv[1]);
 		
 		if (arrptn.num < 1)
