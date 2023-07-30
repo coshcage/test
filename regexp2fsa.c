@@ -4,17 +4,17 @@
 #include "svgraph.h"
 #include "svstack.h"
 #include "svqueue.h"
- 
+
 STACK_L stkOperator, stkOperand;
 QUEUE_L queRegexp;
 GRAPH_L machine;
- 
+
 struct st_Operator
 {
     char name;
     char level;
 } operators[] = { '(', -1, ')', -1, '*', 2, '|', 1 };
- 
+
 typedef struct st_Element
 {
     union un_Data
@@ -24,27 +24,27 @@ typedef struct st_Element
     } data;
     BOOL isOperator;
 } Element, * P_Element;
- 
+
 typedef struct st_Node
 {
     size_t x;
     size_t y;
 } Node, * P_Node;
- 
+
 /* Finding info for edges. */
 typedef struct _st_FIEDG {
     EDGE     vertex;
     P_NODE_S pnode;
     size_t   bweight; /* TRUE for weighted graph; FALSE for unweighted graph. */
 } _FIEDG, * _P_FIEDG;
- 
+
 int cbftvsFindMaxData(void * pitem, size_t param)
 {
-    if (*(size_t *)((P_TNODE_B)pitem)->pdata > * (size_t *)param)
-        *(size_t *)param = *(size_t *)((P_TNODE_B)pitem)->pdata;
+    if (*(size_t *)((P_TNODE_BY)pitem)->pdata > *(size_t *)param)
+        *(size_t *)param = *(size_t *)((P_TNODE_BY)pitem)->pdata;
     return CBF_CONTINUE;
 }
- 
+
 size_t GenerateUniqueState(P_GRAPH_L pgrp)
 {
     if (setIsEmptyT(pgrp))
@@ -55,7 +55,7 @@ size_t GenerateUniqueState(P_GRAPH_L pgrp)
         return r + 1;
     }
 }
- 
+
 char GetOperator(char o)
 {
     int i;
@@ -64,7 +64,7 @@ char GetOperator(char o)
             return operators[i].level;
     return 0;
 }
- 
+
 int Splitter(char * pstr)
 {
     BOOL turn = FALSE;
@@ -102,7 +102,7 @@ int Splitter(char * pstr)
                 case '(':
                     break;
                 case ')':
-                    if (! stkIsEmptyL(&stkOperator))
+                    if (!stkIsEmptyL(&stkOperator))
                     {
                         stkPeepL(&c, sizeof(char), &stkOperator);
                         while (c != '(')
@@ -125,7 +125,7 @@ int Splitter(char * pstr)
                     }
                     goto Lbl_PassOperator;
                 default:
-                    if (! stkIsEmptyL(&stkOperator))
+                    if (!stkIsEmptyL(&stkOperator))
                     {
                         stkPeepL(&c, sizeof(char), &stkOperator);
                         while (GetOperator(c) >= GetOperator(*pstr))
@@ -156,7 +156,7 @@ int Splitter(char * pstr)
         }
         ++pstr;
     }
-    while (! stkIsEmptyL(&stkOperator))
+    while (!stkIsEmptyL(&stkOperator))
     {
         stkPopL(&c, sizeof(char), &stkOperator);
         if (c == '(')
@@ -175,7 +175,7 @@ int Splitter(char * pstr)
     }
     return 0;
 }
- 
+
 /*
  *  _______          __a__
  *  |     |         |     V
@@ -192,7 +192,7 @@ Node CombineNode5(char transition)
     grpInsertEdgeL(&machine, node.x, node.y, (size_t)transition);
     return node;
 }
- 
+
 /*
  *  ________          __x__  __e__  __y__
  *  |      |         |     V/     V/     V
@@ -207,7 +207,7 @@ Node CombineNode1(Node nodeA, Node nodeB)
     nodeR.y = nodeB.y;
     return nodeR;
 }
- 
+
 /*
  *  _________          __e__  __x__  __e__
  *  |       |         |     V/     V/     V
@@ -223,15 +223,15 @@ Node CombineNode2(Node nodeA, Node nodeB)
     grpInsertVertexL(&machine, nodeR.x);
     nodeR.y = GenerateUniqueState(&machine);
     grpInsertVertexL(&machine, nodeR.y);
- 
+
     grpInsertEdgeL(&machine, nodeR.x, nodeA.x, 0); /* Epsilon transition. */
     grpInsertEdgeL(&machine, nodeR.x, nodeB.x, 0);
     grpInsertEdgeL(&machine, nodeA.y, nodeR.y, 0);
     grpInsertEdgeL(&machine, nodeB.y, nodeR.y, 0);
- 
+
     return nodeR;
 }
- 
+
 /*
  *  _________          __e__  __x__  __e__
  *  |       |         |     V/     V/     V
@@ -246,25 +246,25 @@ Node CombineNode3(Node nodeA)
     grpInsertVertexL(&machine, nodeR.x);
     nodeR.y = GenerateUniqueState(&machine);
     grpInsertVertexL(&machine, nodeR.y);
- 
+
     grpInsertEdgeL(&machine, nodeR.x, nodeA.x, 0);
     grpInsertEdgeL(&machine, nodeA.y, nodeR.y, 0);
     grpInsertEdgeL(&machine, nodeR.x, nodeR.y, 0);
     grpInsertEdgeL(&machine, nodeR.y, nodeR.x, 0);
- 
+
     return nodeR;
 }
- 
+
 int cbftvsPrint(void * pitem, size_t param)
 {
     P_Element pele = (P_Element)((P_NODE_S)pitem)->pdata;
-    if (! pele->isOperator)
+    if (!pele->isOperator)
         printf(" (%c)", pele->data.operand);
     else
         printf(" %c", pele->data.operator);
     return CBF_CONTINUE;
 }
- 
+
 //int CBFFindEdgeInList(void * pitem, size_t param)
 //{
 //  _P_FIEDG pd = (_P_FIEDG)param;
@@ -294,7 +294,7 @@ int cbftvsPrint(void * pitem, size_t param)
 //  }
 //  return -1; /* Can not find vertex vidx. */
 //}
- 
+
 int cbftvsvtxedg(void * pitem, size_t param)
 {
     P_NODE_S pnode = (P_NODE_S)pitem;
@@ -302,10 +302,10 @@ int cbftvsvtxedg(void * pitem, size_t param)
     printf("\t\'\\%lu\'\t(%lu)\n", pedge->weight, pedge->vid);
     return CBF_CONTINUE;
 }
- 
+
 int cbftvsgrp(void * pitem, size_t param)
 {
-    P_TNODE_B tnodeb = P2P_TNODE_B(pitem);
+    P_TNODE_BY tnodeb = P2P_TNODE_BY(pitem);
     P_VERTEX_L pvtx = (P_VERTEX_L)tnodeb->pdata;
     P_Node pnode = (P_Node)param;
     if (pvtx->vid == pnode->x)
@@ -317,7 +317,7 @@ int cbftvsgrp(void * pitem, size_t param)
     strTraverseLinkedListSC_A(pvtx->adjlist, NULL, cbftvsvtxedg, 0);
     return CBF_CONTINUE;
 }
- 
+
 int main(void)
 {
     Node node;
@@ -329,14 +329,14 @@ int main(void)
     queInitL(&queRegexp);
     stkInitL(&operandStack);
     grpInitL(&machine);
- 
+
     printf("Regexp< a(a|d)* >: ");
     scanf_s("%s", exp, BUFSIZ);
     Splitter(exp);
     printf("RPN: ");
     strTraverseLinkedListSC_N(queRegexp.pfront, NULL, cbftvsPrint, 0);
     printf("\n");
- 
+
     while (!queIsEmptyL(&queRegexp))
     {
         Element ele;
@@ -406,10 +406,10 @@ int main(void)
         printf("Expression Error!\n");
         return 4;
     }
- 
+
     printf("Status\tTransition\tStatus\n");
-    treTraverseBIn(machine, cbftvsgrp, &node);
- 
+    treTraverseBYIn(machine, cbftvsgrp, &node);
+
     stkFreeL(&stkOperator);
     stkFreeL(&stkOperand);
     queFreeL(&queRegexp);
