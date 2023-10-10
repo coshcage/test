@@ -10,6 +10,7 @@
 typedef enum en_Terminator
 {
 	T_LeftBracket = -1,
+	T_Epsilon,
 	T_Jumpover,
 	T_Character,
 	T_Selection,
@@ -61,7 +62,7 @@ LEXICON Splitter(FILE * fp, BOOL * pbt)
 			{
 			case L'e':
 				l.ch = L'\0';
-				l.type = T_Character;
+				l.type = T_Epsilon;
 				*pbt = FALSE;
 				break;
 			case L'n':
@@ -203,7 +204,7 @@ void print2DUtil(P_TNODE_BY pnode, int space)
 }
 
 
-void Parse(FILE * fp)
+P_TNODE_BY Parse(FILE * fp)
 {
 	BOOL bt = FALSE;
 	LEXICON lex = { 0 }, tl = { 0 }, ttl = { 0 };
@@ -223,6 +224,14 @@ void Parse(FILE * fp)
 			lex = tl;
 		else
 		{
+			/* We need to insert concatenate in the following circumstances:
+			 * a & b
+			 * a & (
+			 * ) & a
+			 * ) & (
+			 * * & a
+			 * * & (
+			 */
 			switch (tl.type)
 			{
 			case T_Character:
@@ -360,17 +369,27 @@ void Parse(FILE * fp)
 			break;
 	}
 
-	// TODO: print RPN.
-	printf("\n%d\n", strLevelLinkedListSC(stkOperand));
-	stkPeepL(&pnode, sizeof(P_TNODE_BY), &stkOperand);
-	//treTraverseBYLevel(pnode, cbftvsppp, 0);
-
-	print2DUtil(pnode, 0);
-	
+	/* Return a syntax tree. */
+	if (1 == strLevelLinkedListSC(stkOperand))
+	{
+		stkPeepL(&pnode, sizeof(P_TNODE_BY), &stkOperand);
+		print2DUtil(pnode, 0);
+	}
+	else
+	{
+		printf("Error! Invalid regular expression.\n");
+		while (!stkIsEmptyL(&stkOperand))
+		{
+			stkPopL(&pnode, sizeof(P_TNODE_BY), &stkOperand);
+			treDeleteBY(pnode);
+		}
+		pnode = NULL;
+	}
 
 Lbl_ExitParser:
 	stkFreeL(&stkOperand);
 	stkFreeL(&stkOperator);
+	return pnode;
 }
 
 
