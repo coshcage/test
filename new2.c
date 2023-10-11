@@ -7,6 +7,8 @@
 #include "StoneValley/src/svtree.h"
 #include "StoneValley/src/svset.h"
 
+#define DEBUG 1
+
 #define TREE_NODE_SPACE_COUNT 10
 
 typedef enum en_Terminator
@@ -30,16 +32,14 @@ typedef struct st_Lexicon
 	P_SET_T    lastpos;
 } LEXICON, * P_LEXICON;
 
-size_t gline   = 1;
-size_t gcolumn = 1;
+typedef struct st_FollowPos
+{
+	size_t i;
+	P_SET_T followpos;
+} FOLLOWPOS, * P_FOLLOWPOS;
 
 STACK_L stkOperand;
 STACK_L stkOperator;
-
-void Error(wchar_t msg[])
-{
-	wprintf(L"%s at line:%zu, column %zu.\n", msg, gline > 1 ? gline - 1 : gline, gcolumn - 1);
-}
 
 LEXICON Splitter(FILE * fp, BOOL * pbt)
 {
@@ -188,12 +188,6 @@ void PrintLexicon(LEXICON lex)
 	wprintf(L"}\n");
 }
 
-int cbftvsppp(void * pitem, size_t param)
-{
-	PrintLexicon(*(P_LEXICON)((P_TNODE_BY)pitem)->pdata);
-	return CBF_CONTINUE;
-}
-
 void PrintSyntaxTree(P_TNODE_BY pnode, size_t space)
 {
 	size_t i;
@@ -306,7 +300,25 @@ int cbftvsComputeNullableAndPos(void * pitem, size_t param)
 	return CBF_CONTINUE;
 }
 
-P_TNODE_BY Parse(FILE * fp)
+int cbftvsCleanStruct(void * pitem, size_t param)
+{
+	P_LEXICON plex = (P_LEXICON)(P2P_TNODE_BY(pitem)->pdata);
+
+	if (NULL != plex->firstpos)
+		setDeleteT(plex->firstpos);
+	if (NULL != plex->lastpos)
+		setDeleteT(plex->lastpos);
+
+	return CBF_CONTINUE;
+}
+
+void DestroySyntaxTree(P_TNODE_BY pnode)
+{
+	treTraverseBYPost(pnode, cbftvsCleanStruct, 0);
+	treFreeBY(&pnode);
+}
+
+P_TNODE_BY Parse(FILE * fp, size_t * pleaves)
 {
 	BOOL bt = FALSE;
 	size_t posCtr = 1;
@@ -489,30 +501,128 @@ P_TNODE_BY Parse(FILE * fp)
 		stkPeepL(&pnode, sizeof(P_TNODE_BY), &stkOperand);
 	else
 	{
+#if DEBUG
 		printf("Error! Invalid regular expression.\n");
+#endif
 		while (!stkIsEmptyL(&stkOperand))
 		{
 			stkPopL(&pnode, sizeof(P_TNODE_BY), &stkOperand);
-			treDeleteBY(&pnode);
+			DestroySyntaxTree(pnode);
 		}
+		*pleaves = posCtr - 1;
 		pnode = NULL;
 	}
 
 	stkFreeL(&stkOperand);
 	stkFreeL(&stkOperator);
+
+	*pleaves = posCtr - 1;
 	return pnode;
 }
 
+int cbftvsStarTravFirstpos(void * pitem, size_t param)
+{
+	P_ARRAY_Z parr = (P_ARRAY_Z)0[(size_t *)param];
 
+	P_SET_T * ppset = (P_SET_T *)strLocateItemArrayZ(parr, sizeof(P_SET_T), 1[(size_t *)param] - 1);
+
+	if (NULL == *ppset)
+		*ppset = setCreateT();
+
+	setInsertT(*ppset, (size_t *)P2P_TNODE_BY(pitem)->pdata, sizeof(size_t), _grpCBFCompareInteger);
+
+	return CBF_CONTINUE;
+}
+
+int cbftvsStarTravLastpos(void * pitem, size_t param)
+{
+	size_t a[2];
+
+	P_SET_T firstpos = (P_SET_T)1[(size_t *)param];
+
+	a[0] = 0[(size_t *)param];
+	a[1] = *(size_t *)P2P_TNODE_BY(pitem)->pdata;
+
+	setTraverseT(firstpos, cbftvsStarTravFirstpos, (size_t)a, ETM_INORDER);
+	return CBF_CONTINUE;
+}
+
+int cbftvsComputeFollowpos(void * pitem, size_t param)
+{
+	size_t a[2];
+	P_TNODE_BY pnode = P2P_TNODE_BY(pitem);
+
+	a[0] = param;
+
+	if (T_Closure == ((P_LEXICON)pnode->pdata)->type)
+	{
+		a[1] = (size_t)((P_LEXICON)pnode->pdata)->firstpos;
+		setTraverseT(((P_LEXICON)pnode->pdata)->lastpos, cbftvsStarTravLastpos, (size_t)a, ETM_INORDER);
+	}
+	else if (T_Concatenate == ((P_LEXICON)pnode->pdata)->type)
+	{
+		a[1] = (size_t)((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->firstpos;
+		setTraverseT(((P_LEXICON)pnode->ppnode[LEFT]->pdata)->lastpos, cbftvsStarTravLastpos, (size_t)a, ETM_INORDER);
+	}
+
+	return CBF_CONTINUE;
+}
+
+P_ARRAY_Z CreateFollowPosArray(P_TNODE_BY pnode, size_t inodes)
+{
+	P_SET_T nil = NULL;
+
+	P_ARRAY_Z parr = strCreateArrayZ(inodes, sizeof(P_SET_T));
+
+	strSetArrayZ(parr, &nil, sizeof(P_SET_T));
+
+	treTraverseBYPost(pnode, cbftvsComputeFollowpos, (size_t)parr);
+
+	return parr;
+}
+
+int cbftvsPrintFollowposArray(void * pitem, size_t param)
+{
+	P_SET_T pset = *(P_SET_T *)pitem;
+	wprintf(L"%ld\t{", ++0[(size_t *)param]);
+	setTraverseT(pset, cbftvsPrintSet, 0, ETM_INORDER);
+	wprintf(L"}\n");
+	return CBF_CONTINUE;
+}
+
+int cbftvsClearSetT(void * pitem, size_t param)
+{
+	P_SET_T pset = *(P_SET_T *)pitem;
+	if (NULL != pset)
+		setDeleteT(pset);
+	return CBF_CONTINUE;
+}
+
+void DestroyFollowposArray(P_ARRAY_Z parr)
+{
+	strTraverseArrayZ(parr, sizeof(P_SET_T), cbftvsClearSetT, 0, FALSE);
+	strDeleteArrayZ(parr);
+}
 
 int main(int argc, char ** argv)
 {
+	size_t i, j = 0;
+	P_ARRAY_Z parrfollowpos;
 	P_TNODE_BY pnode;
 	FILE * fp = fopen("C:\\Users\\user1\\source\\repos\\ConsoleApplication2\\ConsoleApplication2\\test.txt", "r");
 	//FILE * fp = stdin;
-	pnode = Parse(fp);
+	pnode = Parse(fp, &i);
+
 	treTraverseBYPost(pnode, cbftvsComputeNullableAndPos, 0);
 	PrintSyntaxTree(pnode, 0);
+
+	parrfollowpos = CreateFollowPosArray(pnode, i);
+	strTraverseArrayZ(parrfollowpos, sizeof(P_SET_T), cbftvsPrintFollowposArray, (size_t)&j, FALSE);
+
+	DestroySyntaxTree(pnode);
+	DestroyFollowposArray(parrfollowpos);
+
+	printf("\t%d\n", i);
 	fclose(fp);
 	
 	return 0;
