@@ -7,10 +7,11 @@
 #include "StoneValley/src/svtree.h"
 #include "StoneValley/src/svset.h"
 
+#define TREE_NODE_SPACE_COUNT 10
+
 typedef enum en_Terminator
 {
 	T_LeftBracket = -1,
-	T_Epsilon,
 	T_Jumpover,
 	T_Character,
 	T_Selection,
@@ -62,7 +63,7 @@ LEXICON Splitter(FILE * fp, BOOL * pbt)
 			{
 			case L'e':
 				l.ch = L'\0';
-				l.type = T_Epsilon;
+				l.type = T_Character;
 				*pbt = FALSE;
 				break;
 			case L'n':
@@ -140,37 +141,51 @@ LEXICON Splitter(FILE * fp, BOOL * pbt)
 	return l;
 }
 
+int cbftvsPrintSet(void * pitem, size_t param)
+{
+	wprintf(L"%ld, ", *(size_t *)(P2P_TNODE_BY(pitem)->pdata));
+	return CBF_CONTINUE;
+}
+
 void PrintLexicon(LEXICON lex)
 {
+	P_SET_T p, q;
+	p = lex.firstpos;
+	q = lex.lastpos;
 	switch (lex.type)
 	{
 	case T_Character:
 		if (WEOF == lex.ch)
-			wprintf(L"CHAR: \'(#)\'\n");
+			wprintf(L"CHAR: \'(#)\'  ");
 		else if (L'\0' == lex.ch)
-			wprintf(L"CHAR: \'\\e\'\n");
+			wprintf(L"CHAR: \'\\e\' ");
 		else
-			wprintf(L"CHAR: \'%c\'\n", lex.ch);
+			wprintf(L"CHAR: \'%c\' ", lex.ch);
 		break;
 	case T_Selection:
-		wprintf(L"|\n");
+		wprintf(L"| ");
 		break;
 	case T_Closure:
-		wprintf(L"*\n");
+		wprintf(L"* ");
 		break;
 	case T_LeftBracket:
-		wprintf(L"(\n");
+		wprintf(L"( ");
 		break;
 	case T_RightBracket:
-		wprintf(L")\n");
+		wprintf(L") ");
 		break;
 	case T_Concatenate:
-		wprintf(L".\n");
+		wprintf(L". ");
 		break;
 	case T_Jumpover:
-		wprintf(L"Jump\n");
+		wprintf(L"Jump ");
 		break;
 	}
+	wprintf(L"nulabl:%s {", lex.nullable ? L"TRUE" : L"FALSE");
+	setTraverseT(p, cbftvsPrintSet, 0, ETM_INORDER);
+	wprintf(L"} {");
+	setTraverseT(q, cbftvsPrintSet, 0, ETM_INORDER);
+	wprintf(L"}\n");
 }
 
 int cbftvsppp(void * pitem, size_t param)
@@ -179,34 +194,122 @@ int cbftvsppp(void * pitem, size_t param)
 	return CBF_CONTINUE;
 }
 
-void print2DUtil(P_TNODE_BY pnode, int space)
+void PrintSyntaxTree(P_TNODE_BY pnode, size_t space)
 {
-	// Base case
+	size_t i;
 	if (NULL == pnode)
 		return;
 
-	// Increase distance between levels
-	space += 10;
+	space += TREE_NODE_SPACE_COUNT;
 
 	// Process right child first
-	print2DUtil(pnode->ppnode[RIGHT], space);
+	PrintSyntaxTree(pnode->ppnode[RIGHT], space);
 
 	// Print current node after space
 	// count
 	printf("\n");
-	for (int i = 5; i < space; i++)
+	for (i = TREE_NODE_SPACE_COUNT; i < space; ++i)
 		printf(" ");
-	//printf("%d\n", pnode->data);
+	
 	PrintLexicon(*(P_LEXICON)((P_TNODE_BY)pnode)->pdata);
-
-	// Process left child
-	print2DUtil(pnode->ppnode[LEFT], space);
+	PrintSyntaxTree(pnode->ppnode[LEFT], space);
 }
 
+extern int _grpCBFCompareInteger(const void * px, const void * py);
+
+int cbftvsComputeNullableAndPos(void * pitem, size_t param)
+{
+	P_TNODE_BY pnode = P2P_TNODE_BY(pitem);
+
+	if (NULL != pnode->ppnode[LEFT]) /* pnode is not a leaf node. */
+	{
+		switch (((P_LEXICON)pnode->pdata)->type)
+		{
+		case T_Selection:
+			/* Nullable. */
+			((P_LEXICON)pnode->pdata)->nullable =
+				((P_LEXICON)pnode->ppnode[LEFT]->pdata)->nullable ||
+				((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->nullable;
+
+			/* Firstpos. */
+			((P_LEXICON)pnode->pdata)->firstpos =
+				setCreateUnionT
+				(
+					((P_LEXICON)pnode->ppnode[LEFT]->pdata)->firstpos,
+					((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->firstpos,
+					sizeof(size_t), _grpCBFCompareInteger
+				);
+
+			/* Lastpos. */
+			((P_LEXICON)pnode->pdata)->lastpos =
+				setCreateUnionT
+				(
+					((P_LEXICON)pnode->ppnode[LEFT]->pdata)->lastpos,
+					((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->lastpos,
+					sizeof(size_t), _grpCBFCompareInteger
+				);
+			break;
+		case T_Concatenate:
+			/* Nullable. */
+			((P_LEXICON)pnode->pdata)->nullable =
+				((P_LEXICON)pnode->ppnode[LEFT]->pdata)->nullable &&
+				((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->nullable;
+
+			/* Firstpos. */
+			if (((P_LEXICON)pnode->ppnode[LEFT]->pdata)->nullable)
+				((P_LEXICON)pnode->pdata)->firstpos =
+				setCreateUnionT
+				(
+					((P_LEXICON)pnode->ppnode[LEFT]->pdata)->firstpos,
+					((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->firstpos,
+					sizeof(size_t), _grpCBFCompareInteger
+				);
+			else
+				((P_LEXICON)pnode->pdata)->firstpos =
+					NULL != ((P_LEXICON)pnode->ppnode[LEFT]->pdata)->firstpos ?
+					setCopyT(((P_LEXICON)pnode->ppnode[LEFT]->pdata)->firstpos, sizeof(size_t)) :
+					NULL;
+
+			/* Lastpos. */
+			if (((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->nullable)
+				((P_LEXICON)pnode->pdata)->lastpos =
+				setCreateUnionT
+				(
+					((P_LEXICON)pnode->ppnode[LEFT]->pdata)->lastpos,
+					((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->lastpos,
+					sizeof(size_t), _grpCBFCompareInteger
+				);
+			else
+				((P_LEXICON)pnode->pdata)->lastpos =
+				NULL != ((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->lastpos ?
+				setCopyT(((P_LEXICON)pnode->ppnode[RIGHT]->pdata)->lastpos, sizeof(size_t)) :
+				NULL;
+			break;
+		case T_Closure:
+			/* Nullable. */
+			((P_LEXICON)pnode->pdata)->nullable = TRUE;
+
+			/* Firstpos. */
+			((P_LEXICON)pnode->pdata)->firstpos =
+				NULL != ((P_LEXICON)pnode->ppnode[LEFT]->pdata)->firstpos ?
+				setCopyT(((P_LEXICON)pnode->ppnode[LEFT]->pdata)->firstpos, sizeof(size_t)) :
+				NULL;
+
+			/* Lastpos. */
+			((P_LEXICON)pnode->pdata)->lastpos =
+				NULL != ((P_LEXICON)pnode->ppnode[LEFT]->pdata)->lastpos ?
+				setCopyT(((P_LEXICON)pnode->ppnode[LEFT]->pdata)->lastpos, sizeof(size_t)) :
+				NULL;
+			break;
+		}
+	}
+	return CBF_CONTINUE;
+}
 
 P_TNODE_BY Parse(FILE * fp)
 {
 	BOOL bt = FALSE;
+	size_t posCtr = 1;
 	LEXICON lex = { 0 }, tl = { 0 }, ttl = { 0 };
 	P_TNODE_BY pnode, pnode1, pnode2, pnode3;
 	size_t i = 1, j;
@@ -224,7 +327,7 @@ P_TNODE_BY Parse(FILE * fp)
 			lex = tl;
 		else
 		{
-			/* We need to insert concatenate in the following circumstances:
+			/* We need to insert concatenation in the following circumstances:
 			 * a & b
 			 * a & (
 			 * ) & a
@@ -262,6 +365,19 @@ P_TNODE_BY Parse(FILE * fp)
 				switch (lex.type)
 				{
 				case T_Character:
+					if (L'\0' != lex.ch)
+					{
+						lex.firstpos = setCreateT();
+						setInsertT(lex.firstpos, &posCtr, sizeof(size_t), _grpCBFCompareInteger);
+						lex.lastpos = setCreateT();
+						setInsertT(lex.lastpos, &posCtr, sizeof(size_t), _grpCBFCompareInteger);
+						++posCtr;
+					}
+					else
+						lex.firstpos = NULL;
+
+					lex.nullable = L'\0' == lex.ch ? TRUE : FALSE;
+
 					pnode = strCreateNodeD(&lex, sizeof(LEXICON));
 					stkPushL(&stkOperand, &pnode, sizeof(P_TNODE_BY));
 					break;
@@ -283,16 +399,17 @@ P_TNODE_BY Parse(FILE * fp)
 
 								pnode1->ppnode[RIGHT] = pnode2;
 								pnode1->ppnode[LEFT] = pnode3;
-
 								break;
 							case T_Closure:
 								stkPopL(&pnode2, sizeof(P_TNODE_BY), &stkOperand);
 								pnode1->ppnode[LEFT] = pnode2;
+
 								break;
 							}
 							stkPushL(&stkOperand, &pnode1, sizeof(P_TNODE_BY));
 						}
 					}
+					lex.lastpos = lex.firstpos = NULL;
 					pnode1 = strCreateNodeD(&lex, sizeof(LEXICON));
 					stkPushL(&stkOperator, &pnode1, sizeof(P_TNODE_BY));
 					break;
@@ -318,7 +435,6 @@ P_TNODE_BY Parse(FILE * fp)
 
 									pnode1->ppnode[RIGHT] = pnode2;
 									pnode1->ppnode[LEFT] = pnode3;
-
 									break;
 								case T_Closure:
 									stkPopL(&pnode2, sizeof(P_TNODE_BY), &stkOperand);
@@ -356,7 +472,6 @@ P_TNODE_BY Parse(FILE * fp)
 
 				pnode1->ppnode[RIGHT] = pnode2;
 				pnode1->ppnode[LEFT] = pnode3;
-
 				break;
 			case T_Closure:
 				stkPopL(&pnode2, sizeof(P_TNODE_BY), &stkOperand);
@@ -371,22 +486,18 @@ P_TNODE_BY Parse(FILE * fp)
 
 	/* Return a syntax tree. */
 	if (1 == strLevelLinkedListSC(stkOperand))
-	{
 		stkPeepL(&pnode, sizeof(P_TNODE_BY), &stkOperand);
-		print2DUtil(pnode, 0);
-	}
 	else
 	{
 		printf("Error! Invalid regular expression.\n");
 		while (!stkIsEmptyL(&stkOperand))
 		{
 			stkPopL(&pnode, sizeof(P_TNODE_BY), &stkOperand);
-			treDeleteBY(pnode);
+			treDeleteBY(&pnode);
 		}
 		pnode = NULL;
 	}
 
-Lbl_ExitParser:
 	stkFreeL(&stkOperand);
 	stkFreeL(&stkOperator);
 	return pnode;
@@ -396,9 +507,12 @@ Lbl_ExitParser:
 
 int main(int argc, char ** argv)
 {
+	P_TNODE_BY pnode;
 	FILE * fp = fopen("C:\\Users\\user1\\source\\repos\\ConsoleApplication2\\ConsoleApplication2\\test.txt", "r");
 	//FILE * fp = stdin;
-	Parse(fp);
+	pnode = Parse(fp);
+	treTraverseBYPost(pnode, cbftvsComputeNullableAndPos, 0);
+	PrintSyntaxTree(pnode, 0);
 	fclose(fp);
 	
 	return 0;
