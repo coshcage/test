@@ -32,73 +32,67 @@ typedef struct st_Lexicon
 	P_SET_T    lastpos;
 } LEXICON, * P_LEXICON;
 
-typedef struct st_FollowPos
-{
-	size_t i;
-	P_SET_T followpos;
-} FOLLOWPOS, * P_FOLLOWPOS;
-
 STACK_L stkOperand;
 STACK_L stkOperator;
 
 LEXICON Splitter(FILE * fp, BOOL * pbt)
 {
-	LEXICON l = { 0 };
+	LEXICON lex = { 0 };
 
-	l.ch = fgetwc(fp);
+	lex.ch = fgetwc(fp);
 
-	if (L'\\' == l.ch)
+	if (L'\\' == lex.ch)
 	{
 		*pbt = !*pbt;
 		if (FALSE == *pbt)
-			l.type = T_Character;
+			lex.type = T_Character;
 		else
-			l.type = T_Jumpover;
+			lex.type = T_Jumpover;
 	}
 	else
 	{
 		if (*pbt)
 		{
-			switch (l.ch)
+			switch (lex.ch)
 			{
 			case L'e':
-				l.ch = L'\0';
-				l.type = T_Character;
+				lex.ch = L'\0';
+				lex.type = T_Character;
 				*pbt = FALSE;
 				break;
 			case L'n':
-				l.ch = L'\n';
-				l.type = T_Character;
+				lex.ch = L'\n';
+				lex.type = T_Character;
 				*pbt = FALSE;
 				break;
 			case L't':
-				l.ch = L'\t';
-				l.type = T_Character;
+				lex.ch = L'\t';
+				lex.type = T_Character;
 				*pbt = FALSE;
 				break;
 			case L'a':
-				l.ch = L'\a';
-				l.type = T_Character;
+				lex.ch = L'\a';
+				lex.type = T_Character;
 				*pbt = FALSE;
 				break;
 			case L'r':
-				l.ch = L'\r';
-				l.type = T_Character;
+				lex.ch = L'\r';
+				lex.type = T_Character;
 				*pbt = FALSE;
 				break;
 			case L'v':
-				l.ch = L'\v';
-				l.type = T_Character;
+				lex.ch = L'\v';
+				lex.type = T_Character;
 				*pbt = FALSE;
 				break;
 			case L'f':
-				l.ch = L'\f';
-				l.type = T_Character;
+				lex.ch = L'\f';
+				lex.type = T_Character;
 				*pbt = FALSE;
 				break;
 			case L'b':
-				l.ch = L'\b';
-				l.type = T_Character;
+				lex.ch = L'\b';
+				lex.type = T_Character;
 				*pbt = FALSE;
 				break;
 			case L'.':
@@ -106,39 +100,39 @@ LEXICON Splitter(FILE * fp, BOOL * pbt)
 			case L'*':
 			case L'(':
 			case L')':
-				l.type = T_Character;
+				lex.type = T_Character;
 				*pbt = FALSE;
 				break;
 			default:
-				l.type = T_Character;
+				lex.type = T_Character;
 				*pbt = FALSE;
 			}
 		}
 		else /* if FALSE == bt. */
 		{
-			switch (l.ch)
+			switch (lex.ch)
 			{
 			case L'.':
-				l.type = T_Concatenate;
+				lex.type = T_Concatenate;
 				break;
 			case L'|':
-				l.type = T_Selection;
+				lex.type = T_Selection;
 				break;
 			case L'*':
-				l.type = T_Closure;
+				lex.type = T_Closure;
 				break;
 			case L'(':
-				l.type = T_LeftBracket;
+				lex.type = T_LeftBracket;
 				break;
 			case L')':
-				l.type = T_RightBracket;
+				lex.type = T_RightBracket;
 				break;
 			default:
-				l.type = T_Character;
+				lex.type = T_Character;
 			}
 		}
 	}
-	return l;
+	return lex;
 }
 
 int cbftvsPrintSet(void * pitem, size_t param)
@@ -372,8 +366,9 @@ P_TNODE_BY Parse(FILE * fp, size_t * pleaves)
 				}
 				else if (2 == i && 1 == j)
 					lex = ttl;
-
+#if DEBUG
 				PrintLexicon(lex);
+#endif
 				switch (lex.type)
 				{
 				case T_Character:
