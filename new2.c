@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <stdio.h>
 #include <wchar.h>
+#include <limits.h>
 #include "StoneValley/src/svstring.h"
 #include "StoneValley/src/svstack.h"
 #include "StoneValley/src/svqueue.h"
@@ -31,6 +32,19 @@ typedef struct st_Lexicon
 	P_SET_T    firstpos;
 	P_SET_T    lastpos;
 } LEXICON, * P_LEXICON;
+
+typedef struct st_DStates
+{
+	P_SET_T pset;
+	size_t  mark;
+	size_t  label;
+} DSTATES, * P_DSTATES;
+
+typedef struct st_LVFNDTBL
+{
+	wchar_t ch;
+	size_t  i;
+} LVFNDTBL, * P_LVFNDTBL;
 
 STACK_L stkOperand;
 STACK_L stkOperator;
@@ -599,10 +613,178 @@ void DestroyFollowposArray(P_ARRAY_Z parr)
 	strDeleteArrayZ(parr);
 }
 
+int cbftvsConstructLeafNodeTable(void * pitem, size_t param)
+{
+	P_TNODE_BY pnode = P2P_TNODE_BY(pitem);
+
+	if
+	(
+		NULL == pnode->ppnode[LEFT] &&
+		NULL == pnode->ppnode[RIGHT] &&
+		'\0' != ((P_LEXICON)pnode->pdata)->ch
+		&& WEOF != ((P_LEXICON)pnode->pdata)->ch
+	)
+	{
+		(*(P_LVFNDTBL *)param)->ch = ((P_LEXICON)pnode->pdata)->ch;
+		(*(P_LVFNDTBL *)param)->i = *(size_t *)(*((P_SET_T)((P_LEXICON)pnode->pdata)->firstpos))->knot.pdata;
+		++*(P_LVFNDTBL *)param;
+	}
+
+	return CBF_CONTINUE;
+}
+
+P_ARRAY_Z ConstructLeafNodeTable(P_TNODE_BY pnode, size_t inodes)
+{
+	P_ARRAY_Z parr = strCreateArrayZ(inodes - 1, sizeof(LVFNDTBL));
+	P_LVFNDTBL pl = (P_LVFNDTBL)strLocateItemArrayZ(parr, sizeof(LVFNDTBL), 0);
+
+	treTraverseBYPost(pnode, cbftvsConstructLeafNodeTable, (size_t)&pl);
+
+	return parr;
+}
+
+int cbftvsPrintLeafNodeTable(void * pitem, size_t param)
+{
+	wprintf(L"%c\t%ld\n", ((P_LVFNDTBL)pitem)->ch, ((P_LVFNDTBL)pitem)->i);
+
+	return CBF_CONTINUE;
+}
+
+int cbfcmpWChar_t(const void * px, const void * py)
+{
+	if (*(wchar_t *)px > *(wchar_t *)py) return  1;
+	if (*(wchar_t *)px < *(wchar_t *)py) return -1;
+	return 0;
+}
+
+int cbftvsCompressInputSymbols(void * pitem, size_t param)
+{
+	setInsertT((P_SET_T)param, &(((P_LVFNDTBL)pitem)->ch), sizeof(wchar_t), cbfcmpWChar_t);
+	return CBF_CONTINUE;
+}
+
+int cbftvsFillDFAHeader(void * pitem, size_t param)
+{
+	**(size_t **)param = (size_t)*(wchar_t *)P2P_TNODE_BY(pitem)->pdata;
+	++*(size_t **)param;
+	return CBF_CONTINUE;
+}
+
+int cbftvsFindUnmarked(void * pitem, size_t param)
+{
+	if (TRUE != ((P_DSTATES)(P2P_TNODE_BY(pitem)->pdata))->mark)
+	{
+		*(P_DSTATES *)param = (P_DSTATES)(P2P_TNODE_BY(pitem)->pdata);
+		return CBF_TERMINATE;
+	}
+	return CBF_CONTINUE;
+}
+
+int cbftvsCmpTwoSets(void * pitem, size_t param)
+{
+	if (setIsEqualT(((P_DSTATES)P2P_TNODE_BY(pitem)->pdata)->pset, (P_SET_T)param, _grpCBFCompareInteger))
+		return CBF_TERMINATE;
+	return CBF_CONTINUE;
+}
+
+P_MATRIX ConstructDFA(P_ARRAY_Z parflps, P_ARRAY_Z parlvfndtbl, P_TNODE_BY proot, size_t iend)
+{
+	P_MATRIX dfa;
+	DSTATES d;
+	P_DSTATES pd;
+	size_t m = 1, n;
+	P_SET_T psetDstates;
+	/* Construct table header first. */
+	{
+		/* Compress input symbols. */
+		P_SET_T pset;
+		size_t * p;
+		pset = setCreateT();
+
+		strTraverseArrayZ(parlvfndtbl, sizeof(LVFNDTBL), cbftvsCompressInputSymbols, (size_t)pset, FALSE);
+
+		dfa = strCreateMatrix(1, treArityBY(*pset) + 1, sizeof(size_t));
+
+		p = (size_t *)strGetValueMatrix(NULL, dfa, 0, 1, sizeof(size_t));
+
+		setTraverseT(pset, cbftvsFillDFAHeader, (size_t)&p, ETM_INORDER);
+
+		setDeleteT(pset);
+	}
+	psetDstates = setCreateT();
+
+	d.pset = setCopyT(((P_LEXICON)proot->pdata)->firstpos, sizeof(size_t));
+	d.mark = FALSE;
+	d.label = m;
+	++m;
+
+	setInsertT(psetDstates, &d, sizeof(DSTATES), _grpCBFCompareInteger);
+
+	pd = NULL;
+	setTraverseT(psetDstates, cbftvsFindUnmarked, (size_t)&pd, ETM_LEVELORDER);
+
+	while (pd)
+	{
+		size_t i, j, k;
+		P_SET_T u1, u2 = setCreateT();
+		pd->mark = TRUE;
+		
+		for (i = 1; i < dfa->col; ++i)
+		{
+			size_t iwc;
+			strGetValueMatrix(&iwc, dfa, 0, i, sizeof(size_t));
+
+			for (j = 0; j < strLevelArrayZ(parlvfndtbl); ++j)
+			{
+				if (((P_LVFNDTBL)strLocateItemArrayZ(parlvfndtbl, sizeof(LVFNDTBL), j))->ch == (wchar_t)iwc)
+				{
+					k = ((P_LVFNDTBL)strLocateItemArrayZ(parlvfndtbl, sizeof(LVFNDTBL), j))->i;
+					if (setIsMemberT(pd->pset, &k, _grpCBFCompareInteger))
+					{
+						u1 = setCreateUnionT(u2, strLocateItemArrayZ(parflps, sizeof(P_SET_T), k - 1), sizeof(size_t), _grpCBFCompareInteger);
+						setDeleteT(u2);
+						u2 = u1;
+
+						/* Whether u1 is in Dstates. */
+						if (CBF_CONTINUE == setTraverseT(psetDstates, cbftvsCmpTwoSets, (size_t)u1, ETM_LEVELORDER))
+						{
+							d.pset = setCopyT(u1, sizeof(size_t));
+							d.mark = FALSE;
+							d.label = m;
+							++m;
+
+							setInsertT(psetDstates, &d, sizeof(DSTATES), _grpCBFCompareInteger);
+
+							strResizeMatrix(dfa, m - 1, dfa->col, sizeof(size_t));
+
+							n = m - 1;
+							if (setIsMemberT(pd->pset, &iend, _grpCBFCompareInteger))
+								n |= (1 << (sizeof(size_t) * CHAR_BIT - 1));
+							strSetValueMatrix(dfa, n, 0, &n, sizeof(size_t));
+						}
+						setDeleteT(u1);
+
+						n = m;
+						
+						strSetValueMatrix(dfa, pd->label, i, &n, sizeof(size_t));
+					}
+				}
+			}
+		}
+
+
+		pd = NULL;
+		setTraverseT(psetDstates, cbftvsFindUnmarked, (size_t)&pd, ETM_LEVELORDER);
+	}
+
+
+	setDeleteT(psetDstates);
+}
+
 int main(int argc, char ** argv)
 {
 	size_t i, j = 0;
-	P_ARRAY_Z parrfollowpos;
+	P_ARRAY_Z parrfollowpos, parrlvfndtbl;
 	P_TNODE_BY pnode;
 	FILE * fp = fopen("C:\\Users\\user1\\source\\repos\\ConsoleApplication2\\ConsoleApplication2\\test.txt", "r");
 	//FILE * fp = stdin;
@@ -614,10 +796,15 @@ int main(int argc, char ** argv)
 	parrfollowpos = CreateFollowPosArray(pnode, i);
 	strTraverseArrayZ(parrfollowpos, sizeof(P_SET_T), cbftvsPrintFollowposArray, (size_t)&j, FALSE);
 
+	printf("\n");
+
+	parrlvfndtbl = ConstructLeafNodeTable(pnode, i);
+	strTraverseArrayZ(parrlvfndtbl, sizeof(LVFNDTBL), cbftvsPrintLeafNodeTable, 0, FALSE);
+
 	DestroySyntaxTree(pnode);
 	DestroyFollowposArray(parrfollowpos);
-
-	printf("\t%d\n", i);
+	strDeleteArrayZ(parrlvfndtbl);
+	
 	fclose(fp);
 	
 	return 0;
