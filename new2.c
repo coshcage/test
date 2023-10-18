@@ -689,7 +689,7 @@ int cbftvsCmpTwoSets(void * pitem, size_t param)
 
 P_MATRIX ConstructDFA(P_ARRAY_Z parflps, P_ARRAY_Z parlvfndtbl, P_TNODE_BY proot, size_t iend)
 {
-	P_MATRIX dfa;
+	P_MATRIX dfa = NULL;
 	DSTATES d;
 	P_DSTATES pd;
 	size_t m = 1, n;
@@ -777,8 +777,8 @@ P_MATRIX ConstructDFA(P_ARRAY_Z parflps, P_ARRAY_Z parlvfndtbl, P_TNODE_BY proot
 		setTraverseT(psetDstates, cbftvsFindUnmarked, (size_t)&pd, ETM_LEVELORDER);
 	}
 
-
 	setDeleteT(psetDstates);
+	return dfa;
 }
 
 int main(int argc, char ** argv)
