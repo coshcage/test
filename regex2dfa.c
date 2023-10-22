@@ -8,11 +8,11 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <limits.h>
-#include "StoneValley/src/svstring.h"
-#include "StoneValley/src/svstack.h"
-#include "StoneValley/src/svqueue.h"
-#include "StoneValley/src/svtree.h"
-#include "StoneValley/src/svset.h"
+#include "svstring.h"
+#include "svstack.h"
+#include "svqueue.h"
+#include "svtree.h"
+#include "svset.h"
 
  // #define DEBUG 1
 
@@ -158,7 +158,7 @@ LEXICON Splitter(FILE * fp, BOOL * pbt)
 
 int cbftvsPrintSet(void * pitem, size_t param)
 {
-	wprintf(L"%ld, ", *(size_t *)(P2P_TNODE_BY(pitem)->pdata));
+	wprintf(L"%zd, ", *(size_t *)(P2P_TNODE_BY(pitem)->pdata));
 	return CBF_CONTINUE;
 }
 
@@ -196,7 +196,7 @@ void PrintLexicon(LEXICON lex)
 		wprintf(L"Jump ");
 		break;
 	}
-	wprintf(L"nulabl:%s {", lex.nullable ? L"TRUE" : L"FALSE");
+	wprintf(L"nulabl:%ls {", lex.nullable ? L"TRUE" : L"FALSE");
 	setTraverseT(p, cbftvsPrintSet, 0, ETM_INORDER);
 	wprintf(L"} {");
 	setTraverseT(q, cbftvsPrintSet, 0, ETM_INORDER);
@@ -599,7 +599,7 @@ P_ARRAY_Z CreateFollowPosArray(P_TNODE_BY pnode, size_t inodes)
 int cbftvsPrintFollowposArray(void * pitem, size_t param)
 {
 	P_SET_T pset = *(P_SET_T *)pitem;
-	wprintf(L"%ld\t{", ++0[(size_t *)param]);
+	wprintf(L"%zd\t{", ++0[(size_t *)param]);
 	setTraverseT(pset, cbftvsPrintSet, 0, ETM_INORDER);
 	wprintf(L"}\n");
 	return CBF_CONTINUE;
@@ -733,7 +733,7 @@ P_MATRIX ConstructDFA(P_ARRAY_Z parflps, P_ARRAY_Z parlvfndtbl, P_TNODE_BY proot
 
 		strTraverseArrayZ(parlvfndtbl, sizeof(LVFNDTBL), cbftvsCompressInputSymbols, (size_t)pset, FALSE);
 
-		dfa = strCreateMatrix(2, treArityBY(*pset) + 1, sizeof(size_t));
+		dfa = strCreateMatrix(2, treArityBY(P2P_TNODE_BY(*pset)) + 1, sizeof(size_t));
 
 		n = 0;
 		strSetMatrix(dfa, &n, sizeof(size_t));
@@ -880,8 +880,8 @@ int main(int argc, char ** argv)
 		printf("\n? ");
 
 
-		(void)wscanf_s(L"%s", wcs, BUFSIZ - 1);
-		wprintf(L"%s\n", wcs);
+		(void)wscanf(L"%ls", wcs);
+		wprintf(L"%ls\n", wcs);
 		j = *(size_t *)strGetValueMatrix(NULL, dfa, 1, 0, sizeof(size_t));
 		k = wcslen(wcs);
 		for (i = 0; i < k; ++i)
