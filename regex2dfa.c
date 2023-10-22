@@ -2,6 +2,7 @@
  * Compile this file with StoneValley.
  * License: GPLv2.
  * Author: cosh.cage at hotmail.com
+ * 10/22/23
  */
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <stdio.h>
@@ -16,6 +17,7 @@
  // #define DEBUG 1
 
 #define TREE_NODE_SPACE_COUNT 10
+#define SIGN (1ULL << (sizeof(size_t) * CHAR_BIT - 1))
 
 typedef enum en_Terminator
 {
@@ -706,7 +708,7 @@ void PrintDFA(P_MATRIX pmtx)
 		for (j = 0; j < pmtx->col; ++j)
 		{
 			strGetValueMatrix(&k, pmtx, i, j, sizeof(size_t));
-			if (k & (1 << (sizeof(size_t) * CHAR_BIT - 1)))
+			if (k & SIGN)
 				printf("*%c\t", (k & (~0UL >> 1)) + 'A' - 1);
 			else
 				printf("%c\t", k + 'A' - 1);
@@ -808,7 +810,7 @@ P_MATRIX ConstructDFA(P_ARRAY_Z parflps, P_ARRAY_Z parlvfndtbl, P_TNODE_BY proot
 
 				n = m - 1;
 				if (setIsMemberT(d.pset, &iend, _grpCBFCompareInteger))
-					n |= (1 << (sizeof(size_t) * CHAR_BIT - 1));
+					n |= SIGN;
 				strSetValueMatrix(dfa, m - 1, 0, &n, sizeof(size_t));
 #ifdef DEBUG
 				printf("\n");
@@ -856,44 +858,49 @@ int main(int argc, char ** argv)
 	//FILE * fp = stdin;
 	pnode = Parse(fp, &i);
 
-	treTraverseBYPost(pnode, cbftvsComputeNullableAndPos, 0);
-	PrintSyntaxTree(pnode, 0);
-
-	parrfollowpos = CreateFollowPosArray(pnode, i);
-	strTraverseArrayZ(parrfollowpos, sizeof(P_SET_T), cbftvsPrintFollowposArray, (size_t)&j, FALSE);
-
-	printf("\n");
-
-	parrlvfndtbl = ConstructLeafNodeTable(pnode, i);
-	strTraverseArrayZ(parrlvfndtbl, sizeof(LVFNDTBL), cbftvsPrintLeafNodeTable, 0, FALSE);
-
-	printf("\n");
-
-	dfa = ConstructDFA(parrfollowpos, parrlvfndtbl, pnode, i);
-	PrintDFA(dfa);
-
-
-	(void)wscanf_s(L"%s", wcs, BUFSIZ - 1);
-	wprintf(L"%s\n", wcs);
-	j = *(size_t *)strGetValueMatrix(NULL, dfa, 1, 0, sizeof(size_t));
-	k = wcslen(wcs);
-	for (i = 0; i < k; ++i)
+	if (NULL != pnode)
 	{
-		j = NextState(dfa, j, wcs[i]);
-		strGetValueMatrix(&l, dfa, j, 0, sizeof(size_t));
-		if (l & (1 << (sizeof(size_t) * CHAR_BIT - 1)))
+
+		treTraverseBYPost(pnode, cbftvsComputeNullableAndPos, 0);
+		PrintSyntaxTree(pnode, 0);
+
+		parrfollowpos = CreateFollowPosArray(pnode, i);
+		strTraverseArrayZ(parrfollowpos, sizeof(P_SET_T), cbftvsPrintFollowposArray, (size_t)&j, FALSE);
+
+		printf("\n");
+
+		parrlvfndtbl = ConstructLeafNodeTable(pnode, i);
+		strTraverseArrayZ(parrlvfndtbl, sizeof(LVFNDTBL), cbftvsPrintLeafNodeTable, 0, FALSE);
+
+		printf("\n");
+
+		dfa = ConstructDFA(parrfollowpos, parrlvfndtbl, pnode, i);
+		PrintDFA(dfa);
+
+		printf("\n? ");
+
+
+		(void)wscanf_s(L"%s", wcs, BUFSIZ - 1);
+		wprintf(L"%s\n", wcs);
+		j = *(size_t *)strGetValueMatrix(NULL, dfa, 1, 0, sizeof(size_t));
+		k = wcslen(wcs);
+		for (i = 0; i < k; ++i)
 		{
-			printf("Match!");
-			break;
+			j = NextState(dfa, j, wcs[i]);
+			strGetValueMatrix(&l, dfa, j, 0, sizeof(size_t));
+			if (l & SIGN)
+			{
+				printf("Match!");
+				break;
+			}
 		}
+
+		DestroyFollowposArray(parrfollowpos);
+		strDeleteArrayZ(parrlvfndtbl);
+		strDeleteMatrix(dfa);
 	}
 
 	DestroySyntaxTree(pnode);
-	DestroyFollowposArray(parrfollowpos);
-	strDeleteArrayZ(parrlvfndtbl);
-	strDeleteMatrix(dfa);
-
 	fclose(fp);
-
 	return 0;
 }
