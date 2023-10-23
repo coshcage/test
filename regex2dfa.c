@@ -890,7 +890,7 @@ int main(int argc, char ** argv)
 			strGetValueMatrix(&l, dfa, j, 0, sizeof(size_t));
 			if (l & SIGN)
 			{
-				printf("Match!");
+				printf("Match!\n");
 				break;
 			}
 		}
