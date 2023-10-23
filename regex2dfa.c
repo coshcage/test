@@ -387,7 +387,7 @@ P_TNODE_BY Parse(FILE * fp, size_t * pleaves)
 				}
 				else if (2 == i && 1 == j)
 					lex = ttl;
-#if DEBUG
+#ifdef DEBUG
 				PrintLexicon(lex);
 #endif
 				switch (lex.type)
@@ -516,7 +516,7 @@ P_TNODE_BY Parse(FILE * fp, size_t * pleaves)
 		stkPeepL(&pnode, sizeof(P_TNODE_BY), &stkOperand);
 	else
 	{
-#if DEBUG
+#ifdef DEBUG
 		printf("Error! Invalid regular expression.\n");
 #endif
 		while (!stkIsEmptyL(&stkOperand))
