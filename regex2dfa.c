@@ -717,6 +717,21 @@ void PrintDFA(P_MATRIX pmtx)
 	}
 }
 
+int cbftvsDestroyDstates(void * pitem, size_t param)
+{
+	P_DSTATES pd;
+	pd = (P_DSTATES)P2P_TNODE_BY(pitem)->pdata;
+	if (pd->pset)
+		setDeleteT(pd->pset);
+	return CBF_CONTINUE;
+}
+
+void DestroyDstates(P_SET_T pds)
+{
+	setTraverseT(pds, cbftvsDestroyDstates, 0, ETM_POSTORDER);
+	setDeleteT(pds);
+}
+
 P_MATRIX ConstructDFA(P_ARRAY_Z parflps, P_ARRAY_Z parlvfndtbl, P_TNODE_BY proot, size_t iend)
 {
 	P_MATRIX dfa = NULL;
@@ -831,7 +846,7 @@ P_MATRIX ConstructDFA(P_ARRAY_Z parflps, P_ARRAY_Z parlvfndtbl, P_TNODE_BY proot
 		setTraverseT(psetDstates, cbftvsFindUnmarked, (size_t)&pd, ETM_LEVELORDER);
 	}
 
-	setDeleteT(psetDstates);
+	DestroyDstates(psetDstates);
 	return dfa;
 }
 
@@ -865,20 +880,19 @@ int main(int argc, char ** argv)
 		PrintSyntaxTree(pnode, 0);
 
 		parrfollowpos = CreateFollowPosArray(pnode, i);
-		strTraverseArrayZ(parrfollowpos, sizeof(P_SET_T), cbftvsPrintFollowposArray, (size_t)&j, FALSE);
+		//strTraverseArrayZ(parrfollowpos, sizeof(P_SET_T), cbftvsPrintFollowposArray, (size_t)&j, FALSE);
 
 		printf("\n");
 
 		parrlvfndtbl = ConstructLeafNodeTable(pnode, i);
-		strTraverseArrayZ(parrlvfndtbl, sizeof(LVFNDTBL), cbftvsPrintLeafNodeTable, 0, FALSE);
+		//strTraverseArrayZ(parrlvfndtbl, sizeof(LVFNDTBL), cbftvsPrintLeafNodeTable, 0, FALSE);
 
 		printf("\n");
 
 		dfa = ConstructDFA(parrfollowpos, parrlvfndtbl, pnode, i);
-		PrintDFA(dfa);
+		//PrintDFA(dfa);
 
 		printf("\n? ");
-
 
 		(void)wscanf(L"%ls", wcs);
 		wprintf(L"%ls\n", wcs);
