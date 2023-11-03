@@ -2,7 +2,7 @@
  * Name:        svcompress.c
  * Description: Compress files.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0120211637B0120211637L00208
+ * File ID:     0120211637B1104230438L00206
  * License:     Public Domain.
  */
 
@@ -120,8 +120,6 @@ SVCERROR svcCompressFile(FILE * fpout, FILE * fpin)
 	return SVC_NONE;
 
 Lbl_Compress_Error:
-	fclose(fpin);
-	fclose(fpout);
 	strFreeArrayZ(&arrInBuffer);
 	return rtn;
 }
