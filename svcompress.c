@@ -57,11 +57,13 @@ SVCERROR svcCompressFile(FILE * fpout, FILE * fpin)
 	{
 		arrInBuffer.pdata[i] = (UCHART)c;
 		if (++i >= strLevelArrayZ(&arrInBuffer))
+		{
 			if (NULL == strResizeArrayZ(&arrInBuffer, strLevelArrayZ(&arrInBuffer) + INITIAL_BUFFER_SIZE, sizeof(UCHART)))
 			{
 				rtn = SVC_ALLOCATION;
 				goto Lbl_Compress_Error;
 			}
+		}
 	}
 	if (NULL == strResizeArrayZ(&arrInBuffer, i, sizeof(UCHART)))
 	{
