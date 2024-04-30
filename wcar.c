@@ -2,10 +2,11 @@
  * Name:        wcar.c
  * Description: Word correction and recommendation.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0430240345A0430240345L00075
+ * File ID:     0430240345A0430240345L00076
  * License:     Public Domain.
  */
 #include <stdio.h>
+#include <string.h>
 #include "svstring.h"
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
