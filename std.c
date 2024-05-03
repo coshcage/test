@@ -6,11 +6,11 @@ UCHART volatile array[MEM_SIZ]; /* Create a linear address space in heap. */
 
 const PUCHAR volatile pmem = (const PUCHAR volatile)array;
 
-volatile P_BLOCK_HEADER phead = mpkInitMemory(); /* This is the header pointer of block chain. */
+volatile P_BLOCK_HEADER phead = NULL; /* This is the header pointer of block chain. */
 
 /* Invoke this function before you use any function of this package.
  */
-P_BLOCK_HEADER mpkInitMemory(void)
+void mpkInitMemory(void)
 {
 	phead = (P_BLOCK_HEADER)pmem;
 	phead->pblock = pmem + sizeof(BLOCK_HEADER);
@@ -19,7 +19,6 @@ P_BLOCK_HEADER mpkInitMemory(void)
 	phead->pnext->pblock = pmem + MEM_SIZ;
 	phead->pnext->pnext = NULL;
 	phead->pnext->size = 0;
-	return phead;
 }
 
 void * memcpy(void * dst, void * src, size_t size)
@@ -140,7 +139,7 @@ void * calloc(size_t n, size_t size)
 int memcmp(const void * s1, const void * s2, size_t n)
 {
 	PUCHAR su1, su2;
-	for (su1 = s1, su2 = s2; 0 < n; ++su1, ++su2, --n)
+	for (su1 = (PUCHAR)s1, su2 = (PUCHAR)s2; 0 < n; ++su1, ++su2, --n)
 		if (*su1 != *su2)
 			return *su1 < *su2 ? -1 : 1;
 	return 0;
