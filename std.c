@@ -6,11 +6,11 @@ UCHART volatile array[MEM_SIZ]; /* Create a linear address space in heap. */
 
 const PUCHAR volatile pmem = (const PUCHAR volatile)array;
 
-volatile P_BLOCK_HEADER phead = NULL; /* This is the header pointer of block chain. */
+volatile P_BLOCK_HEADER phead = mpkInitMemory(); /* This is the header pointer of block chain. */
 
 /* Invoke this function before you use any function of this package.
  */
-void mpkInitMemory(void)
+P_BLOCK_HEADER mpkInitMemory(void)
 {
 	phead = (P_BLOCK_HEADER)pmem;
 	phead->pblock = pmem + sizeof(BLOCK_HEADER);
@@ -19,6 +19,7 @@ void mpkInitMemory(void)
 	phead->pnext->pblock = pmem + MEM_SIZ;
 	phead->pnext->pnext = NULL;
 	phead->pnext->size = 0;
+	return phead;
 }
 
 void * memcpy(void * dst, void * src, size_t size)
@@ -118,7 +119,7 @@ void * realloc(void * ptr, size_t size)
 					void * newptr = malloc(size);
 					if (NULL != newptr)
 					{
-						memcpy(newptr, ptr, pnode->pnext->size);
+						memcpy(newptr, ptr, size <= pnode->pnext->size ? size : pnode->pnext->size);
 						free(ptr);
 					}
 					return newptr;
