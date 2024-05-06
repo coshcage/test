@@ -14,7 +14,7 @@
 
 typedef struct st_IDEA
 {
-	uint8_t bKey[16];    /* User key of 128 bits. */
+	uint8_t  bKey  [16]; /* User key of 128 bits. */
 	uint16_t bEnKey[53]; /* Encryption key.       */
 	uint16_t bDeKey[53]; /* Decryption key.       */
 } IDEA, * P_IDEA;
