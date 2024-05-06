@@ -93,8 +93,8 @@ void * ideaSecureZeroMemory(void * ptr, size_t cnt)
 	while (cnt)
 	{
 		*vptr = 0;
-		vptr++;
-		cnt--;
+		++vptr;
+		--cnt;
 	}
 	return ptr;
 }
