@@ -305,8 +305,9 @@ static void DecryptionRoundTransform(P_IDEA pi, uint16_t * px1, uint16_t * px2, 
  *            Output the buffer length of pCipher that is encrypted.
  * Return value:  true:  Encryption succeeded.
  *                false: Encryption failed.
- * Tip:           //int main()
- *                //{
+ * Tip:           //#include <stdio.h>
+ *                //#include "idea.h"
+ *                //int main() {
  *                //	size_t i = 100;
  *                //	char text[100] = "hello world!";
  *                //	char cipher[100] = { 0 };
