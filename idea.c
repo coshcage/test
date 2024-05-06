@@ -3,7 +3,7 @@
  * Description: International Data Encryption Algorithm.
  * Author:      cosh.cage#hotmail.com
  *              This code is duplicated from book ISBN 978-7-111-23862-1.
- * File ID:     0506240719A0506240748L00407
+ * File ID:     0506240719A0506240748L00409
  * License:     Public Domain.
  */
 
@@ -56,18 +56,18 @@ uint8_t gBitMask[8] =
  */
 static ptrdiff_t ExtendedEuclid(ptrdiff_t e, ptrdiff_t f)
 {
-	ptrdiff_t x1 = 1, x2 = 0, x3 = f;
-	ptrdiff_t y1 = 0, y2 = 1, y3 = e;
+	register ptrdiff_t x1 = 1, x2 = 0, x3 = f;
+	register ptrdiff_t y1 = 0, y2 = 1, y3 = e;
 	if (0 == x3 || 0 == y3)
 		return 0;
 	if (1 == y3)
 		return y2;
 	for (;;)
 	{
-		ptrdiff_t b = x3 / y3;
-		ptrdiff_t t1 = x1 - y1 * b;
-		ptrdiff_t t2 = x2 - y2 * b;
-		ptrdiff_t t3 = x3 - y3 * b;
+		register ptrdiff_t b = x3 / y3;
+		register ptrdiff_t t1 = x1 - y1 * b;
+		register ptrdiff_t t2 = x2 - y2 * b;
+		register ptrdiff_t t3 = x3 - y3 * b;
 		x1 = y1; x2 = y2; x3 = y3;
 		y1 = t1; y2 = t2; y3 = t3;
 		if (1 == y3)
@@ -109,7 +109,7 @@ void * ideaSecureZeroMemory(void * ptr, size_t cnt)
  */
 void ideaInit(P_IDEA pi, uint8_t * pKey, size_t num)
 {
-	size_t i, j, k = 1;
+	register size_t i, j, k = 1;
 
 	memcpy(pi->bKey, pKey, (num < 16 ? num : 16));
 
@@ -164,7 +164,7 @@ void ideaFree(P_IDEA pi)
  */
 P_IDEA ideaCreate(uint8_t * pKey, size_t num)
 {
-	P_IDEA pi;
+	register P_IDEA pi;
 	if (0 == num)
 		return NULL;
 	pi = (P_IDEA)malloc(sizeof(IDEA));
@@ -211,27 +211,27 @@ static void EncryptionRoundTransform(P_IDEA pi, uint16_t * px1, uint16_t * px2, 
 		return;
 	}
 	{
-		uint16_t k1 = pi->bEnKey[(index - 1) * 6 + 1];
-		uint16_t k2 = pi->bEnKey[(index - 1) * 6 + 2];
-		uint16_t k3 = pi->bEnKey[(index - 1) * 6 + 3];
-		uint16_t k4 = pi->bEnKey[(index - 1) * 6 + 4];
-		uint16_t k5 = pi->bEnKey[(index - 1) * 6 + 5];
-		uint16_t k6 = pi->bEnKey[(index - 1) * 6 + 6];
+		register uint16_t k1 = pi->bEnKey[(index - 1) * 6 + 1];
+		register uint16_t k2 = pi->bEnKey[(index - 1) * 6 + 2];
+		register uint16_t k3 = pi->bEnKey[(index - 1) * 6 + 3];
+		register uint16_t k4 = pi->bEnKey[(index - 1) * 6 + 4];
+		register uint16_t k5 = pi->bEnKey[(index - 1) * 6 + 5];
+		register uint16_t k6 = pi->bEnKey[(index - 1) * 6 + 6];
 
-		uint16_t v1 = MUL(*px1, k1);
-		uint16_t v2 = ADD(*px2, k2);
-		uint16_t v3 = ADD(*px3, k3);
-		uint16_t v4 = MUL(*px4, k4);
-		uint16_t v5 = XOR(v1, v3);
-		uint16_t v6 = XOR(v2, v4);
-		uint16_t v7 = MUL(v5, k5);
-		uint16_t v8 = ADD(v6, v7);
-		uint16_t v9 = MUL(v8, k6);
-		uint16_t v10 = ADD(v7, v9);
-		uint16_t v11 = XOR(v1, v9);
-		uint16_t v12 = XOR(v3, v9);
-		uint16_t v13 = XOR(v2, v10);
-		uint16_t v14 = XOR(v4, v10);
+		register uint16_t v1 = MUL(*px1, k1);
+		register uint16_t v2 = ADD(*px2, k2);
+		register uint16_t v3 = ADD(*px3, k3);
+		register uint16_t v4 = MUL(*px4, k4);
+		register uint16_t v5 = XOR(v1, v3);
+		register uint16_t v6 = XOR(v2, v4);
+		register uint16_t v7 = MUL(v5, k5);
+		register uint16_t v8 = ADD(v6, v7);
+		register uint16_t v9 = MUL(v8, k6);
+		register uint16_t v10 = ADD(v7, v9);
+		register uint16_t v11 = XOR(v1, v9);
+		register uint16_t v12 = XOR(v3, v9);
+		register uint16_t v13 = XOR(v2, v10);
+		register uint16_t v14 = XOR(v4, v10);
 
 		*px1 = v11;
 		*px2 = v12;
@@ -265,27 +265,27 @@ static void DecryptionRoundTransform(P_IDEA pi, uint16_t * px1, uint16_t * px2, 
 		return;
 	}
 	{
-		uint16_t k1 = pi->bDeKey[(index - 1) * 6 + 1];
-		uint16_t k2 = pi->bDeKey[(index - 1) * 6 + 2];
-		uint16_t k3 = pi->bDeKey[(index - 1) * 6 + 3];
-		uint16_t k4 = pi->bDeKey[(index - 1) * 6 + 4];
-		uint16_t k5 = pi->bDeKey[(index - 1) * 6 + 5];
-		uint16_t k6 = pi->bDeKey[(index - 1) * 6 + 6];
+		register uint16_t k1 = pi->bDeKey[(index - 1) * 6 + 1];
+		register uint16_t k2 = pi->bDeKey[(index - 1) * 6 + 2];
+		register uint16_t k3 = pi->bDeKey[(index - 1) * 6 + 3];
+		register uint16_t k4 = pi->bDeKey[(index - 1) * 6 + 4];
+		register uint16_t k5 = pi->bDeKey[(index - 1) * 6 + 5];
+		register uint16_t k6 = pi->bDeKey[(index - 1) * 6 + 6];
 
-		uint16_t v1 = MUL(*px1, k1);
-		uint16_t v2 = ADD(*px2, k2);
-		uint16_t v3 = ADD(*px3, k3);
-		uint16_t v4 = MUL(*px4, k4);
-		uint16_t v5 = XOR(v1, v3);
-		uint16_t v6 = XOR(v2, v4);
-		uint16_t v7 = MUL(v5, k5);
-		uint16_t v8 = ADD(v6, v7);
-		uint16_t v9 = MUL(v8, k6);
-		uint16_t v10 = ADD(v7, v9);
-		uint16_t v11 = XOR(v1, v9);
-		uint16_t v12 = XOR(v3, v9);
-		uint16_t v13 = XOR(v2, v10);
-		uint16_t v14 = XOR(v4, v10);
+		register uint16_t v1 = MUL(*px1, k1);
+		register uint16_t v2 = ADD(*px2, k2);
+		register uint16_t v3 = ADD(*px3, k3);
+		register uint16_t v4 = MUL(*px4, k4);
+		register uint16_t v5 = XOR(v1, v3);
+		register uint16_t v6 = XOR(v2, v4);
+		register uint16_t v7 = MUL(v5, k5);
+		register uint16_t v8 = ADD(v6, v7);
+		register uint16_t v9 = MUL(v8, k6);
+		register uint16_t v10 = ADD(v7, v9);
+		register uint16_t v11 = XOR(v1, v9);
+		register uint16_t v12 = XOR(v3, v9);
+		register uint16_t v13 = XOR(v2, v10);
+		register uint16_t v14 = XOR(v4, v10);
 
 		*px1 = v11;
 		*px2 = v12;
@@ -330,7 +330,7 @@ bool ideaEncrypt(P_IDEA pi, uint8_t * pText, size_t num, uint8_t * pCipher, size
 	memcpy(pCipher, pText, nsize);
 	{
 		uint16_t a, b, c, d;
-		size_t nTime = nsize / 8, i, j;
+		register size_t nTime = nsize / 8, i, j;
 		for (i = 0; i < nTime; ++i)
 		{
 			a = (pCipher[8 * i] << 8) + pCipher[8 * i + 1];
@@ -351,7 +351,8 @@ bool ideaEncrypt(P_IDEA pi, uint8_t * pText, size_t num, uint8_t * pCipher, size
 			pCipher[8 * i + 6] = (uint8_t)(d >> 8);
 			pCipher[8 * i + 7] = (d & 0xFF);
 		}
-		*pnum = nsize;
+		if (NULL != pnum)
+			*pnum = nsize;
 	}
 	return true;
 }
@@ -379,7 +380,7 @@ bool ideaDecrypt(P_IDEA pi, uint8_t * pCipher, size_t num, uint8_t * pText, size
 	memcpy(pText, pCipher, nsize);
 	{
 		uint16_t a, b, c, d;
-		size_t nTime = nsize / 8, i;
+		register size_t nTime = nsize / 8, i, j;
 		for (i = 0; i < nTime; i++)
 		{
 			a = (pText[8 * i] << 8) + pText[8 * i + 1];
@@ -387,7 +388,7 @@ bool ideaDecrypt(P_IDEA pi, uint8_t * pCipher, size_t num, uint8_t * pText, size
 			c = (pText[8 * i + 4] << 8) + pText[8 * i + 5];
 			d = (pText[8 * i + 6] << 8) + pText[8 * i + 7];
 
-			for (int j = 1; j <= 8; j++)
+			for (j = 1; j <= 8; j++)
 				DecryptionRoundTransform(pi, &a, &b, &c, &d, j);
 			DecryptionRoundTransform(pi, &a, &c, &b, &d, 9);
 
@@ -400,7 +401,8 @@ bool ideaDecrypt(P_IDEA pi, uint8_t * pCipher, size_t num, uint8_t * pText, size
 			pText[8 * i + 6] = (uint8_t)(d >> 8);
 			pText[8 * i + 7] = (d & 0xFF);
 		}
-		*pnum = nsize;
+		if (NULL != pnum)
+			*pnum = nsize;
 	}
 	return true;
 }
