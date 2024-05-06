@@ -2,12 +2,13 @@
  * Name:        idea.h
  * Description: International Data Encryption Algorithm.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0506240719B0506240749L00030
+ * File ID:     0506240719B0506240749L00031
  * License:     Public Domain.
  */
 #ifndef _IDEA_H_
 #define _IDEA_H_
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
