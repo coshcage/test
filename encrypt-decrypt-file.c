@@ -7,10 +7,10 @@
 
 #define SZSALT "\xeb\xeb\xeb\xeb"
 
-P_ARRAY_Z ReadFileIntoArrayZ(FILE * fp)
+P_ARRAY_Z ReadFileIntoArrayZ(FILE * fp, bool bdirect)
 {
 	P_ARRAY_Z parr;
-	size_t i = 0;
+	size_t i = bdirect ? 0 : sizeof(size_t);
 
 	if (NULL != (parr = strCreateArrayZ(BUFSIZ, sizeof(char))))
 	{
@@ -22,6 +22,8 @@ P_ARRAY_Z ReadFileIntoArrayZ(FILE * fp)
 				if (NULL == strResizeArrayZ(parr, strLevelArrayZ(parr) + BUFSIZ, sizeof(char)))
 					return NULL;
 		}
+		if (!bdirect)
+			0[(size_t *)parr->pdata] = i - 1;
 		if (NULL == strResizeArrayZ(parr, i - 1, sizeof(char)))
 			return NULL;
 	}
@@ -41,7 +43,7 @@ bool EncryptFile(FILE * pfout, FILE * pfin)
 		char tempbuff[BUFSIZ * 2] = { 0 };
 		unsigned char hash[32];
 		unsigned char hash2[32];
-		P_ARRAY_Z parr = ReadFileIntoArrayZ(pfin);
+		P_ARRAY_Z parr = ReadFileIntoArrayZ(pfin, false);
 		P_ARRAY_Z parr2 = strCreateArrayZ(strLevelArrayZ(parr) + BUFSIZ, sizeof(char));
 		do
 		{
@@ -149,14 +151,16 @@ bool DecryptFile(FILE * pfout, FILE * pfin)
 
 		ideaInit(&idea, hash2, sizeof(hash2));
 
-		parr = ReadFileIntoArrayZ(pfin);
+		parr = ReadFileIntoArrayZ(pfin, true);
 		parr2 = strCreateArrayZ(strLevelArrayZ(parr) + BUFSIZ, sizeof(char));
 
 		i = strLevelArrayZ(parr2);
 
 		ideaDecrypt(&idea, parr->pdata, strLevelArrayZ(parr), parr2->pdata, &i);
 
-		for (j = 0; j < i; ++j)
+		i = 0[(size_t *)parr2->pdata];
+
+		for (j = sizeof(size_t); j < i; ++j)
 			fputc(parr2->pdata[j], pfout);
 
 		ideaSecureZeroMemory(password, BUFSIZ);
