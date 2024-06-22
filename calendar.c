@@ -5,7 +5,7 @@
 
 const char * szwtitle = " Sun Mon Tue Wed Thu Fri Sat";
 
-int DayOfWeek(y, m, d)	/* Sakamoto's methods. */
+DayOfWeek(y, m, d)	/* Sakamoto's methods. */
 {
 	static int t[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
 	if (m < 3)
