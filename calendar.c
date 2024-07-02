@@ -5,7 +5,7 @@
 
 const char * szwtitle = " Sun Mon Tue Wed Thu Fri Sat";
 
-DayOfWeek(y, m, d)	/* Sakamoto's methods. */
+int DayOfWeek(int y, int m, int d)	/* Sakamoto's methods. */
 {
 	static int t[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
 	if (m < 3)
@@ -14,7 +14,6 @@ DayOfWeek(y, m, d)	/* Sakamoto's methods. */
 	}
 	return (y + y / 4 - y / 100 + y / 400 + t[m - 1] + d) % 7;
 }
-
 
 void DrawCalendar(struct tm * buf)
 {
@@ -34,7 +33,7 @@ void DrawCalendar(struct tm * buf)
 		e = 30;
 	}
 	printf("%s\n", szwtitle);
-	for (i = 0, f = buf->tm_wday % 7; i < f; ++i)
+	for (i = 0, f = (DayOfWeek(buf->tm_year + 1900, buf->tm_mon, buf->tm_mday) + 1) % 7; i < f; ++i)
 	{
 		printf("    ");
 	}
