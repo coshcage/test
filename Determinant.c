@@ -49,10 +49,8 @@ MYTYPE Determinant(P_MATRIX pmtx)
 		{
 
 			P_MATRIX pm = NULL;
-			int a;
-			strGetValueMatrix(&a, pmtx, 0, j, sizeof(int));
-			pm = CreateMinor(pmtx, j, sizeof(int));
-			det += (a * SGN(j) * Determinant(pm));
+			pm = CreateMinor(pmtx, j, sizeof(MYTYPE));
+			det += (*(MYTYPE *)strGetValueMatrix(NULL, pmtx, 0, j, sizeof(MYTYPE)) * SGN(j) * Determinant(pm));
 			strDeleteMatrix(pm);
 		}
 	}
