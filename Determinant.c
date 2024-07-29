@@ -35,15 +35,31 @@ P_MATRIX CreateMinor(P_MATRIX pmtx, size_t mcol, size_t size)
 	return pmtxr;
 }
 
+MYTYPE Determinant2_2(P_MATRIX pmtx)
+{
+	if (2 == pmtx->ln)
+	{
+		return *(MYTYPE *)strGetValueMatrix(NULL, pmtx, 0, 0, sizeof(MYTYPE)) *
+			*(MYTYPE *)strGetValueMatrix(NULL, pmtx, 1, 1, sizeof(MYTYPE)) -
+			*(MYTYPE *)strGetValueMatrix(NULL, pmtx, 0, 1, sizeof(MYTYPE)) *
+			*(MYTYPE *)strGetValueMatrix(NULL, pmtx, 1, 0, sizeof(MYTYPE));
+	}
+	return 0;
+}
+
 MYTYPE Determinant(P_MATRIX pmtx)
 {
 	MYTYPE det = 0;
 	size_t j;
 	if (1 == pmtx->col)
 	{
-		return *(MYTYPE *)strGetValueMatrix(NULL, pmtx, 0, 0, sizeof(int));
+		return *(MYTYPE *)strGetValueMatrix(NULL, pmtx, 0, 0, sizeof(MYTYPE));
 	}
-	else
+	else if (2 == pmtx->col)
+	{
+		return Determinant2_2(pmtx);
+	}
+	else if (pmtx->col == pmtx->ln)
 	{
 		for (j = 0; j < pmtx->col; ++j)
 		{
@@ -59,18 +75,20 @@ MYTYPE Determinant(P_MATRIX pmtx)
 
 int main()
 {
+	size_t i, j;
 	MATRIX mtx;
 
 	int a[4][4] = { 1,-2,3,-1,2,3,1,2,-3,2,0,3,7,1,1,1 };
 
-	mtx.arrz.num = 9;
+	mtx.arrz.num = 16;
 	mtx.arrz.pdata = (PUCHAR)a;
-	mtx.ln = 3;
-	mtx.col = 3;
+	mtx.ln = 4;
+	mtx.col = 4;
 
 	PrintMatrix(&mtx);
 
-	printf("det(A)= %d\n", Determinant(&mtx));
+	for (i = 0; i < 9999; ++i)
+		j = Determinant(&mtx);
 
-	return 0;
+	return j;
 }
