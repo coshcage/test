@@ -388,7 +388,7 @@ bool ideaDecrypt(P_IDEA pi, uint8_t * pCipher, size_t num, uint8_t * pText, size
 			c = (pText[8 * i + 4] << 8) + pText[8 * i + 5];
 			d = (pText[8 * i + 6] << 8) + pText[8 * i + 7];
 
-			for (j = 1; j <= 8; j++)
+			for (j = 1; j <= 8; ++j)
 				DecryptionRoundTransform(pi, &a, &b, &c, &d, j);
 			DecryptionRoundTransform(pi, &a, &c, &b, &d, 9);
 
