@@ -381,7 +381,7 @@ bool ideaDecrypt(P_IDEA pi, uint8_t * pCipher, size_t num, uint8_t * pText, size
 	{
 		uint16_t a, b, c, d;
 		register size_t nTime = nsize / 8, i, j;
-		for (i = 0; i < nTime; i++)
+		for (i = 0; i < nTime; ++i)
 		{
 			a = (pText[8 * i] << 8) + pText[8 * i + 1];
 			b = (pText[8 * i + 2] << 8) + pText[8 * i + 3];
