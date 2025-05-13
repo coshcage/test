@@ -2,7 +2,7 @@
  * Name:        svcompress.c
  * Description: Compress files.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0120211637B1104230438L00206
+ * File ID:     0120211637B0513250851L00218
  * License:     Public Domain.
  */
 
@@ -72,7 +72,12 @@ SVCERROR svcCompressFile(FILE * fpout, FILE * fpin)
 	}
 
 	/* Compress data. */
-	if (NULL == (pbstm = treHuffmanEncoding(&parrTable, arrInBuffer.pdata, i)))
+	if (NULL == (parrTable = treCreateHuffmanTable(arrInBuffer.pdata, i)))
+	{
+		rtn = SVC_COMPRESS;
+		goto Lbl_Compress_Error;
+	}
+	if (NULL == (pbstm = treHuffmanEncoding(parrTable, arrInBuffer.pdata, i)))
 	{
 		rtn = SVC_COMPRESS;
 		goto Lbl_Compress_Error;
@@ -122,6 +127,10 @@ SVCERROR svcCompressFile(FILE * fpout, FILE * fpin)
 	return SVC_NONE;
 
 Lbl_Compress_Error:
+	if (NULL != pbstm)
+		strDeleteBitStream(pbstm);
+	if (NULL != parrTable)
+		strDeleteArrayZ(parrTable);
 	strFreeArrayZ(&arrInBuffer);
 	return rtn;
 }
@@ -205,3 +214,4 @@ SVCERROR svcDecompressFile(FILE * fpout, FILE * fpin)
 	strDeleteBitStream(pbsout);
 	return SVC_NONE;
 }
+
