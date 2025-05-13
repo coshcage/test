@@ -4,6 +4,8 @@
 #include "svstring.h"
 #include "svset.h"
 
+#define LSO_VERSION "1.0.0"
+
 typedef enum en_OPR
 {
 	OPR_UNION,
@@ -17,18 +19,26 @@ typedef struct st_LNSET
 	P_SET_T set;
 } LNSET, * P_LNSET;
 
-void PrintHelp()
+static void ShowHelp(void);
+static int cbfcmpsz(const void * px, const void * py);
+static int cbftvsfreesz(void * pitem, size_t param);
+static int cbftvsfreesz(void * pitem, size_t param);
+static int cbftvsprintsz(void * pitem, size_t param);
+static void ReadFiles(P_ARRAY_Z parrsets);
+static P_SET_T Solve(OPR opr, P_ARRAY_Z parrsets);
+
+static void ShowHelp()
 {
-	printf("lso (Line Set Operations)");
-	printf("lso [-u|-i|-d] file ...");
+	printf("lso (Line Set Operations)\n");
+	printf("lso [-u|-i|-d|-h|-v] file ...\n");
 }
 
-int cbfcmpsz(const void * px, const void * py)
+static int cbfcmpsz(const void * px, const void * py)
 {
 	return strcmp(*(char **)px, *(char **)py);
 }
 
-int cbftvsfreesz(void * pitem, size_t param)
+static int cbftvsfreesz(void * pitem, size_t param)
 {
 	P_NODE_D pn = (P_NODE_D)pitem;
 	free(*(char **)pn->pdata);
@@ -36,7 +46,7 @@ int cbftvsfreesz(void * pitem, size_t param)
 	return CBF_CONTINUE;
 }
 
-int cbftvsprintsz(void * pitem, size_t param)
+static int cbftvsprintsz(void * pitem, size_t param)
 {
 	P_NODE_D pn = (P_NODE_D)pitem;
 	printf("%s\n", *(char **)pn->pdata);
@@ -44,7 +54,7 @@ int cbftvsprintsz(void * pitem, size_t param)
 	return CBF_CONTINUE;
 }
 
-void ReadFiles(P_ARRAY_Z parrsets)
+static void ReadFiles(P_ARRAY_Z parrsets)
 {
 	size_t i;
 	P_ARRAY_Z szbuf = strCreateArrayZ(BUFSIZ, sizeof(char));
@@ -53,14 +63,15 @@ void ReadFiles(P_ARRAY_Z parrsets)
 		char * psz;
 		size_t j = 0;
 		P_LNSET pl = (P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i);
-		while (!feof(pl->fp))
+		while (pl->fp && !feof(pl->fp))
 		{
-			char c = fgetc(pl->fp);
+			int c = fgetc(pl->fp);
 			switch (c)
 			{
 			case '\n':
 			case '\r':
 			case '\0':
+			case EOF:
 				if (!j)
 					break;
 				/* End of string. */
@@ -75,7 +86,7 @@ void ReadFiles(P_ARRAY_Z parrsets)
 				j = 0;
 				break;
 			default:
-				*(char *)strLocateItemArrayZ(szbuf, sizeof(char), j) = c;
+				*(char *)strLocateItemArrayZ(szbuf, sizeof(char), j) = (char)c;
 				++j;
 				if (j >= strLevelArrayZ(szbuf))
 				{
@@ -87,12 +98,11 @@ void ReadFiles(P_ARRAY_Z parrsets)
 	strDeleteArrayZ(szbuf);
 }
 
-P_SET_T Solve(OPR opr, P_ARRAY_Z parrsets)
+static P_SET_T Solve(OPR opr, P_ARRAY_Z parrsets)
 {
 	size_t i;
 	P_SET_T r;
-	P_SET_T pset = setCopyT(((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), 0))->set,
-	 sizeof(char *));
+	P_SET_T pset = setCopyT(((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), 0))->set, sizeof(char *));
 	r = pset;
 	for (i = 1; i < strLevelArrayZ(parrsets); ++i)
 	{
@@ -123,6 +133,19 @@ int main(int argc, char ** argv)
 	
 	if (argc <= 2)
 	{
+		if (2 == argc)
+		{
+			if (0 == strcmp("-h", argv[1]))
+			{
+				ShowHelp();
+				return 0;
+			}
+			else if (0 == strcmp("-v", argv[1]))
+			{
+				printf("lso %s\n", LSO_VERSION);
+				return 0;
+			}
+		}
 		printf("Error arguments, type -h to show help.\n");
 		return 1;
 	}
@@ -149,9 +172,9 @@ int main(int argc, char ** argv)
 			/* Open files. */
 			for (i = 0; i < strLevelArrayZ(parrsets); ++i)
 			{
-				((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i))->fp = fopen(argv[i + 2] , "r");
+				FILE * fp = ((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i))->fp = fopen(argv[i + 2] , "r");
 				((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i))->set = 
-				(((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i))->fp) ?
+				fp ?
 				setCreateT() :
 				NULL;
 			}
@@ -168,12 +191,13 @@ int main(int argc, char ** argv)
 			/* Close files. */
 			for (i = 0; i < strLevelArrayZ(parrsets); ++i)
 			{
-				if (((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i))->fp)
+				P_LNSET pl = (P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i);
+				if (pl->fp)
 				{
-					fclose(((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i))->fp);
+					fclose(pl->fp);
 					/* Free sz. */
-					setTraverseT(((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i))->set, cbftvsfreesz, 0, ETM_LEVELORDER);
-					setDeleteT(((P_LNSET)strLocateItemArrayZ(parrsets, sizeof(LNSET), i))->set);
+					setTraverseT(pl->set, cbftvsfreesz, 0, ETM_LEVELORDER);
+					setDeleteT(pl->set);
 				}
 			}
 			strDeleteArrayZ(parrsets);
@@ -181,4 +205,3 @@ int main(int argc, char ** argv)
 	}
 	return 0;
 }
-
