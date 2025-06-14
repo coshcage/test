@@ -29,7 +29,6 @@ BOOL svmGetMenuEnable(P_TNODE_G pnode);
 void svmSetMenuVisible(P_TNODE_G pnode, BOOL bVisible);
 BOOL svmGetMenuVisible(P_TNODE_G pnode);
 P_TNODE_G svmGetSubMenuItem(P_TNODE_G parent, size_t idx);
-P_TNODE_G svmGetSubMenuItem(P_TNODE_G parent, size_t idx);
 void svmShowMenuItem(P_TNODE_G pitem);
 void svmCreateMenuItem(P_SVMENU pm, P_TNODE_G parent, char * name, size_t iact, size_t maxsub, ...);
 void svmDeleteMenuItem(P_TNODE_G parent, P_TNODE_G pchild);
