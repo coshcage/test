@@ -225,8 +225,53 @@ P_HEAP_HEADER nmCreateHeap(void * pbase, size_t size, size_t hshsiz)
 
 P_HEAP_HEADER nmExtendHeap(P_HEAP_HEADER ph, size_t sizincl)
 {
-	
-	return NULL;
+	if (sizincl < MIN_CHUNK_SIZE)
+		return NULL;
+	else
+	{
+		/* Get the last chunk. */
+		bool bused;
+		size_t i;
+		PUCHAR phead;
+		P_FREE_CHUNK pfc;
+		
+		phead = (PUCHAR)ph + HEAP_BEGIN(ph);
+		phead += ph->size - sizeof(size_t);
+		
+		i = *(size_t *)phead;
+		bused = (i & ~(size_t)MARSK) 
+		
+		if (bused)
+		{
+			pfc = (P_FREE_CHUNK)(phead + sizeof(size_t) * 2);
+			
+			sizincl &= ~(size_t)MASK;
+			
+			HEAD_NOTE(pfc) = FOOT_NOTE(pfc) = sizincl;
+			HEAD_NOTE(pfc) &= FREE_MASK;
+			FOOT_NOTE(pfc) &= FREE_MASK;
+			
+			_nmPutChunk(ph, pfc);
+		}
+		else
+		{
+			phead -= i;
+			pfc = (P_FREE_CHUNK)phead;
+			
+			sizincl += i;
+			sizincl &= ~(size_t)MASK;
+			
+			_nmUnlinkChunk(ph, pfc);
+			
+			HEAD_NOTE(pfc) = FOOT_NOTE(pfc) = sizincl;
+			HEAD_NOTE(pfc) &= FREE_MASK;
+			FOOT_NOTE(pfc) &= FREE_MASK;
+			
+			_nmPutChunk(ph, pfc);
+		}
+		
+		return ph;
+	}
 }
 
 void * nmAllocHeap(P_HEAP_HEADER ph, size_t size)
