@@ -69,54 +69,54 @@ int smdfOnAdd(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TNODE_G p
 	if (NULL == *g_pd)
 	{
 		pnode = svmGetSubMenuItem(*pm, 0);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 2);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 3);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 4);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 5);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 6);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 	}
 	else
 	{
 		pnode = svmGetSubMenuItem(*pm, 0);
-		svmSetMenuVisible(pnode, TRUE);
-		svmSetMenuEnable(pnode, TRUE);
+		svmSetMenuVisible(pnode, true);
+		svmSetMenuEnable(pnode, true);
 		
 		pnode = svmGetSubMenuItem(*pm, 2);
-		svmSetMenuVisible(pnode, TRUE);
-		svmSetMenuEnable(pnode, TRUE);
+		svmSetMenuVisible(pnode, true);
+		svmSetMenuEnable(pnode, true);
 		
 		pnode = svmGetSubMenuItem(*pm, 3);
-		svmSetMenuVisible(pnode, TRUE);
-		svmSetMenuEnable(pnode, TRUE);
+		svmSetMenuVisible(pnode, true);
+		svmSetMenuEnable(pnode, true);
 		
 		pnode = svmGetSubMenuItem(*pm, 4);
-		svmSetMenuVisible(pnode, TRUE);
-		svmSetMenuEnable(pnode, TRUE);
+		svmSetMenuVisible(pnode, true);
+		svmSetMenuEnable(pnode, true);
 		
 		pnode = svmGetSubMenuItem(*pm, 5);
-		svmSetMenuVisible(pnode, TRUE);
-		svmSetMenuEnable(pnode, TRUE);
+		svmSetMenuVisible(pnode, true);
+		svmSetMenuEnable(pnode, true);
 		
 		pnode = svmGetSubMenuItem(*pm, 6);
-		svmSetMenuVisible(pnode, TRUE);
-		svmSetMenuEnable(pnode, TRUE);
+		svmSetMenuVisible(pnode, true);
+		svmSetMenuEnable(pnode, true);
 	}
 	return CBF_CONTINUE;
 }
@@ -135,7 +135,7 @@ int smdfOnSearchByID(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TN
 	*pout = parent;
 	printf("Input ID: ");
 	scanf("%d", &i);
-	SearchItem(TRUE, 0, i, NULL);
+	SearchItem(true, 0, i, NULL);
 	
 	return CBF_CONTINUE;
 }
@@ -146,7 +146,7 @@ int smdfOnSearchByName(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_
 	*pout = parent;
 	printf("Input name: ");
 	scanf("%s", sz);
-	SearchItem(TRUE, 1, 0, sz);
+	SearchItem(true, 1, 0, sz);
 	
 	return CBF_CONTINUE;
 }
@@ -157,7 +157,7 @@ int smdfOnSearchByDept(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_
 	*pout = parent;
 	printf("Input department: ");
 	scanf("%s", sz);
-	SearchItem(TRUE, 2, 0, sz);
+	SearchItem(true, 2, 0, sz);
 	
 	return CBF_CONTINUE;
 }
@@ -168,7 +168,7 @@ int smdfOnSearchByTitle(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P
 	*pout = parent;
 	printf("Input title: ");
 	scanf("%s", sz);
-	SearchItem(TRUE, 3, 0, sz);
+	SearchItem(true, 3, 0, sz);
 	
 	return CBF_CONTINUE;
 }
@@ -180,7 +180,7 @@ int smdfOnAlter(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TNODE_G
 	*pout = parent;
 	printf("Input ID: ");
 	scanf("%d", &i);
-	r = SearchItem(TRUE, 0, i, NULL);
+	r = SearchItem(true, 0, i, NULL);
 	
 	if (r)
 	{
@@ -207,7 +207,7 @@ int smdfOnDeleteByID(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TN
 	*pout = parent;
 	printf("Input ID: ");
 	scanf("%d", &i);
-	r = SearchItem(TRUE, 0, i, NULL);
+	r = SearchItem(true, 0, i, NULL);
 	
 	if (r)
 	{
@@ -243,7 +243,7 @@ int smdfOnDeleteByName(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_
 	printf("Input name: ");
 	scanf("%s", sz);
 
-	r = SearchItem(TRUE, 1, 0, sz);
+	r = SearchItem(true, 1, 0, sz);
 	
 	if (r)
 	{
@@ -279,7 +279,7 @@ int smdfOnDeleteByDept(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_
 	printf("Input department: ");
 	scanf("%s", sz);
 
-	r = SearchItem(TRUE, 2, 0, sz);
+	r = SearchItem(true, 2, 0, sz);
 	
 	if (r)
 	{
@@ -335,7 +335,7 @@ int cbfcmpname(const void * px, const void * py)
 int smdfOnSortByID(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TNODE_G pself, P_TNODE_G * pout, void * param)
 {
 	*pout = parent;
-	*g_pd = (P_NODE_D)strMergeSortLinkedListSDC(*g_pd, FALSE, ENT_DOUBLE, cbfcmpid);
+	*g_pd = (P_NODE_D)strMergeSortLinkedListSDC(*g_pd, false, ENT_DOUBLE, cbfcmpid);
 	ViewTable();
 	
 	return CBF_CONTINUE;
@@ -344,7 +344,7 @@ int smdfOnSortByID(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TNOD
 int smdfOnSortBySalary(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TNODE_G pself, P_TNODE_G * pout, void * param)
 {
 	*pout = parent;
-	*g_pd = (P_NODE_D)strMergeSortLinkedListSDC(*g_pd, FALSE, ENT_DOUBLE, cbfcmpsalary);
+	*g_pd = (P_NODE_D)strMergeSortLinkedListSDC(*g_pd, false, ENT_DOUBLE, cbfcmpsalary);
 	ViewTable();
 	
 	return CBF_CONTINUE;
@@ -353,7 +353,7 @@ int smdfOnSortBySalary(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_
 int smdfOnSortByBirth(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TNODE_G pself, P_TNODE_G * pout, void * param)
 {
 	*pout = parent;
-	*g_pd = (P_NODE_D)strMergeSortLinkedListSDC(*g_pd, FALSE, ENT_DOUBLE, cbfcmpbirth);
+	*g_pd = (P_NODE_D)strMergeSortLinkedListSDC(*g_pd, false, ENT_DOUBLE, cbfcmpbirth);
 	ViewTable();
 	
 	return CBF_CONTINUE;
@@ -362,7 +362,7 @@ int smdfOnSortByBirth(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_T
 int smdfOnSortByName(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TNODE_G pself, P_TNODE_G * pout, void * param)
 {
 	*pout = parent;
-	*g_pd = (P_NODE_D)strMergeSortLinkedListSDC(*g_pd, FALSE, ENT_DOUBLE, cbfcmpname);
+	*g_pd = (P_NODE_D)strMergeSortLinkedListSDC(*g_pd, false, ENT_DOUBLE, cbfcmpname);
 	ViewTable();
 	
 	return CBF_CONTINUE;
@@ -399,7 +399,7 @@ int smdfOnStaSalary(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TNO
 	a[3] = 0;
 	
 	if (NULL != *g_pd)
-		strTraverseLinkedListDC_N(*g_pd, NULL, cbftvsmidsalary, (size_t)a, FALSE);
+		strTraverseLinkedListDC_N(*g_pd, NULL, cbftvsmidsalary, (size_t)a, false);
 		
 	printf("Below: %zd.\n", a[1]);
 	printf("Above: %zd.\n", a[2]);
@@ -433,7 +433,7 @@ int smdfOnStaBirth(P_SVMENU pm, P_TNODE_G pgrandparent, P_TNODE_G parent, P_TNOD
 	a[1] = 0;
 	
 	if (NULL != *g_pd)
-		strTraverseLinkedListDC_N(*g_pd, NULL, cbftvsearbirth, (size_t)a, FALSE);
+		strTraverseLinkedListDC_N(*g_pd, NULL, cbftvsearbirth, (size_t)a, false);
 		
 	printf("People whose birthday early than it: %zd.\n", a[1]);
 	

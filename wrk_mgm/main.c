@@ -72,35 +72,36 @@ int main()
 	if (NULL == *g_pd)
 	{
 		pnode = svmGetSubMenuItem(*pm, 0);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 2);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 3);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 4);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 5);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 		
 		pnode = svmGetSubMenuItem(*pm, 6);
-		svmSetMenuVisible(pnode, FALSE);
-		svmSetMenuEnable(pnode, FALSE);
+		svmSetMenuVisible(pnode, false);
+		svmSetMenuEnable(pnode, false);
 	}
 	
 	svmDriver(pm, NULL);
 	
 	WriteFile(SZ_DATA_FILE);
 	
-	strDeleteLinkedListDC(g_pd, FALSE);
+	strDeleteLinkedListDC(g_pd, false);
 	
 	svmDeleteMenu(pm);
 }
+

@@ -11,5 +11,5 @@ int cbftvsprint(void * pitem, size_t param)
 void ViewTable(void)
 {
 	if (NULL != *g_pd)
-		strTraverseLinkedListDC_N(*g_pd, NULL, cbftvsprint, 0, FALSE);
+		strTraverseLinkedListDC_N(*g_pd, NULL, cbftvsprint, 0, false);
 }

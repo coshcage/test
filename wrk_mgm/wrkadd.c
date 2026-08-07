@@ -47,7 +47,7 @@ void AddItem(void)
 	}
 	else
 	{
-		*g_pd = strInsertItemLinkedListDC(*g_pd, pnode, TRUE);
+		*g_pd = strInsertItemLinkedListDC(*g_pd, pnode, true);
 	}
 }
 

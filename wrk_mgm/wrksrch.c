@@ -43,7 +43,7 @@ int cbftvsprintsel(void * pitem, size_t param)
 	return CBF_CONTINUE;
 }
 
-size_t SearchItem(BOOL bprint, int m, int id, char * name)
+size_t SearchItem(bool bprint, int m, int id, char * name)
 {
 	size_t a[5];
 	a[0] = (size_t)m;
@@ -52,7 +52,7 @@ size_t SearchItem(BOOL bprint, int m, int id, char * name)
 	a[3] = bprint;
 	a[4] = 0;
 	if (NULL != *g_pd)
-		strTraverseLinkedListDC_N(*g_pd, NULL, cbftvsprintsel, (size_t)a, FALSE);
+		strTraverseLinkedListDC_N(*g_pd, NULL, cbftvsprintsel, (size_t)a, false);
 	return a[4];
 }
 

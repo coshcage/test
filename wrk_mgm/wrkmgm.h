@@ -23,7 +23,7 @@ void AddItem(void);
 void ViewTable(void);
 void WriteFile(char * szfn);
 int cbftvsprint(void * pitem, size_t param);
-size_t SearchItem(BOOL bprint, int m, int id, char * name);
+size_t SearchItem(bool bprint, int m, int id, char * name);
 
 #endif
 

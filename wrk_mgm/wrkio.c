@@ -24,7 +24,7 @@ void ReadFile(char * szfn)
 				}
 				else
 				{
-					*g_pd = strInsertItemLinkedListDC(*g_pd, pnode, TRUE);
+					*g_pd = strInsertItemLinkedListDC(*g_pd, pnode, true);
 				}
 			}
 		}
@@ -45,7 +45,7 @@ void WriteFile(char * szfn)
 	if (fp)
 	{
 		if (NULL != *g_pd)
-			strTraverseLinkedListDC_N(*g_pd, NULL, cbftvswf, (size_t)fp, FALSE);
+			strTraverseLinkedListDC_N(*g_pd, NULL, cbftvswf, (size_t)fp, false);
 		fclose(fp);
 	}
 }
