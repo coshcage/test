@@ -8,32 +8,32 @@ P_SVM_MENU_ITEM svmGetMenuItemPointer(P_TNODE_G pnode)
 	return (P_SVM_MENU_ITEM)pnode->pdata;
 }
 
-void svmSetMenuChecked(P_TNODE_G pnode, BOOL bChecked)
+void svmSetMenuChecked(P_TNODE_G pnode, bool bChecked)
 {
 	svmGetMenuItemPointer(pnode)->mod.bChecked = !!bChecked;
 }
 
-BOOL svmGetMenuChecked(P_TNODE_G pnode)
+bool svmGetMenuChecked(P_TNODE_G pnode)
 {
 	return svmGetMenuItemPointer(pnode)->mod.bChecked;
 }
 
-void svmSetMenuEnable(P_TNODE_G pnode, BOOL bEnable)
+void svmSetMenuEnable(P_TNODE_G pnode, bool bEnable)
 {
 	svmGetMenuItemPointer(pnode)->mod.bEnable = !!bEnable;
 }
 
-BOOL svmGetMenuEnable(P_TNODE_G pnode)
+bool svmGetMenuEnable(P_TNODE_G pnode)
 {
 	return svmGetMenuItemPointer(pnode)->mod.bEnable;
 }
 
-void svmSetMenuVisible(P_TNODE_G pnode, BOOL bVisible)
+void svmSetMenuVisible(P_TNODE_G pnode, bool bVisible)
 {
 	svmGetMenuItemPointer(pnode)->mod.bVisible = !!bVisible;
 }
 
-BOOL svmGetMenuVisible(P_TNODE_G pnode)
+bool svmGetMenuVisible(P_TNODE_G pnode)
 {
 	return svmGetMenuItemPointer(pnode)->mod.bVisible;
 }
@@ -75,9 +75,9 @@ void svmCreateMenuItem(P_SVMENU pm, P_TNODE_G parent, char * name, size_t iact, 
 	
 	if (NULL == *pm)
 	{
-		smi.mod.bEnable  = TRUE;
-		smi.mod.bChecked = FALSE;
-		smi.mod.bVisible = TRUE;
+		smi.mod.bEnable  = true;
+		smi.mod.bChecked = false;
+		smi.mod.bVisible = true;
 		
 		smi.szCaption = name;
 		smi.iAction   = iact;
@@ -89,9 +89,9 @@ void svmCreateMenuItem(P_SVMENU pm, P_TNODE_G parent, char * name, size_t iact, 
 	for (i = 0; i < maxsub; ++i)
 	{
 		
-		smi.mod.bEnable  = TRUE;
-		smi.mod.bChecked = FALSE;
-		smi.mod.bVisible = TRUE;
+		smi.mod.bEnable  = true;
+		smi.mod.bChecked = false;
+		smi.mod.bVisible = true;
 		
 		smi.szCaption = va_arg(ap, char *);
 		smi.iAction   = va_arg(ap, size_t);
@@ -104,7 +104,7 @@ void svmCreateMenuItem(P_SVMENU pm, P_TNODE_G parent, char * name, size_t iact, 
 
 void svmDeleteMenuItem(P_TNODE_G parent, P_TNODE_G pchild)
 {
-	treRemoveSubtreeG(parent, pchild, TRUE);
+	treRemoveSubtreeG(parent, pchild, true);
 }
 
 P_SVMENU svmCreateMenu(void)
@@ -141,9 +141,8 @@ int svmOnMenu(P_SVMENU pm, P_TNODE_G parent, size_t isub, P_TNODE_G * ppcur, voi
 	}
 }
 
-int svmDriver(P_SVMENU pm, void * param)
+void svmDriver(P_SVMENU pm, void * param)
 {
-	int r;
 	size_t i;
 	P_TNODE_G pnode = *pm;
 	
@@ -151,7 +150,7 @@ int svmDriver(P_SVMENU pm, void * param)
 	{
 		svmShowMenuItem(pnode);
 		printf("?> ");
-		scanf("%zd", &i);
+		scanf("%zu", &i);
 	}
 	while (SVM_CBF_EXIT != svmOnMenu(pm, pnode, i, &pnode, param));
 }

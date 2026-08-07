@@ -13,7 +13,7 @@ int main()
 	
 	svmCreateMenuItem(pm, pnode, NULL, SMDF_DEFAULT, 1, "Back", SMDF_BACK);
 	
-	svmSetMenuChecked(pnode, TRUE);
+	svmSetMenuChecked(pnode, true);
 	
 	pnode = svmGetSubMenuItem(*pm, 2);
 	
